@@ -37,7 +37,7 @@ class Collection(CollectionBase):
         if collection_name is not None:
             self.__collection__ = collection_name
 
-        for k, v in kwargs:
+        for k, v in kwargs.items():
             setattr(self, k, v)
 
     @classmethod

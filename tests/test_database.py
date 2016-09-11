@@ -1,10 +1,10 @@
 "Test cases for the :module:`arango_orm.database`"
 
 from . import TestBase
+from .person import Person
 from arango import ArangoClient
 from arango.collections.base import CollectionStatisticsError
-from marshmallow import Schema
-from marshmallow.fields import String, Date
+
 from arango_orm.database import Database
 from arango_orm.collections import Collection
 
@@ -44,16 +44,6 @@ class TestDatabase(TestBase):
             db['new_collection'].statistics()
 
     def test_04_create_collection_from_custom_class(self):
-
-        class Person(Collection):
-            __collection__ = 'persons'
-
-            class _Schema(Schema):
-                cnic = String(required=True)
-                name = String(required=True, allow_none=False)
-                dob = Date()
-
-            _key_field = 'cnic'
 
         db = self._get_db_obj()
         db.create_collection(Person)
