@@ -1,0 +1,34 @@
+from arango import ArangoClient
+from arango_orm.database import Database
+from arango_orm.collections import Collection
+from marshmallow.fields import List, String, UUID, Integer, Boolean, DateTime, Date
+from marshmallow import (
+    Schema, pre_load, pre_dump, post_load, validates_schema,
+    validates, fields, ValidationError
+)
+
+client = ArangoClient(username='test', password='test')
+test_db = client.db('test')
+
+db = Database(test_db)
+
+
+new_col = Collection('new_collection')
+db.create_collection(new_col)
+db.drop_collection(new_col)
+
+
+class Person(Collection):
+    __collection__ = 'persons'
+
+    class _Schema(Schema):
+        cnic = String(required=True)
+        name = String(required=True, allow_none=False)
+        dob = Date()
+
+    _key_field = 'cnic'
+
+
+pd = {'cnic': '37405-4564665-7', 'dob': '2016-09-12', 'name': 'Kashif Iftikhar'}
+data, errors = Person._Schema().load(pd)
+new_person = Person._load(pd)

@@ -44,7 +44,7 @@ class Database(ArangoDatabase):
         super().create_collection(name=collection.__collection__,
                                   **collection._collection_config)
 
-    def delete_collection(self, collection):
+    def drop_collection(self, collection):
         "Drop a collection"
         self._verify_collection(collection)
 
