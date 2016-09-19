@@ -40,6 +40,19 @@ class Collection(CollectionBase):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
+    def __str__(self):
+        ret = "<" + self.__class__.__name__
+
+        if hasattr(self, '_key'):
+            ret += "(_key=" + getattr(self, '_key') + ')'
+
+        ret += ">"
+
+        return ret
+
+    def __repr__(self):
+        return self.__str__()
+
     @classmethod
     def _load(cls, in_dict):
         "Create object from given dict"

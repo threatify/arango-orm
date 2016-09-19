@@ -5,6 +5,7 @@ from inspect import isclass
 
 from arango.database import Database as ArangoDatabase
 from .collections import CollectionBase
+from .query import Query
 
 
 class Database(ArangoDatabase):
@@ -17,13 +18,6 @@ class Database(ArangoDatabase):
 
         self._db = db
         super(Database, self).__init__(db._conn)
-
-    def create_all(self):
-        """
-        Create all collections, edges, graphs if they don't already exist
-        """
-
-        pass
 
     def _verify_collection(self, col):
         "Verifies the give collection class or object of a collection class"
@@ -50,7 +44,13 @@ class Database(ArangoDatabase):
 
         super().delete_collection(name=collection.__collection__)
 
-    def add(self):
+    def add(self, entity):
         "Add a record to a collection"
 
-        pass
+        collection = self._db.collection(entity.__collection__)
+        return collection.insert(entity._dump())
+
+    def query(self, CollectionClass):
+        "Query given collection"
+
+        return Query(CollectionClass, self)

@@ -1,5 +1,6 @@
 "Test cases for the :module:`arango_orm.database`"
 
+from datetime import date
 from . import TestBase
 from .person import Person
 from arango import ArangoClient
@@ -54,3 +55,11 @@ class TestDatabase(TestBase):
 
         with self.assertRaises(CollectionStatisticsError):
             db['persons'].statistics()
+
+    def test_05_add_records(self):
+
+        db = self._get_db_obj()
+        db.create_collection(Person)
+        p = Person(name='test', cnic='12312', dob=date(year=2016, month=9, day=12))
+        db.add(p)
+        db.drop_collection(Person)

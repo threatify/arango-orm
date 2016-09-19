@@ -5,12 +5,14 @@ from marshmallow import (
     validates, fields, ValidationError
 )
 
+class NodeBase(object):
+    pass
 
-class Node(object):
+class Node(NodeBase):
     pass
 
 
-class Link(object):
+class Link(NodeBase):
     pass
 
 

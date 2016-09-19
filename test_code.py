@@ -1,3 +1,4 @@
+from datetime import date
 from arango import ArangoClient
 from arango_orm.database import Database
 from arango_orm.collections import Collection
@@ -13,11 +14,6 @@ test_db = client.db('test')
 db = Database(test_db)
 
 
-new_col = Collection('new_collection')
-db.create_collection(new_col)
-db.drop_collection(new_col)
-
-
 class Person(Collection):
     __collection__ = 'persons'
 
@@ -29,6 +25,18 @@ class Person(Collection):
     _key_field = 'cnic'
 
 
+db.query(Person).count()
+db.query(Person).all()
+
+p = Person(name='test', cnic='12312', dob=date(year=2016, month=9, day=12))
+db.add(p)
+db.query(Person).count()
+
+
 pd = {'cnic': '37405-4564665-7', 'dob': '2016-09-12', 'name': 'Kashif Iftikhar'}
 data, errors = Person._Schema().load(pd)
 new_person = Person._load(pd)
+
+new_col = Collection('new_collection')
+db.create_collection(new_col)
+db.drop_collection(new_col)
