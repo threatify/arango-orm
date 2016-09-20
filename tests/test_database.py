@@ -63,3 +63,16 @@ class TestDatabase(TestBase):
         p = Person(name='test', cnic='12312', dob=date(year=2016, month=9, day=12))
         db.add(p)
         db.drop_collection(Person)
+
+    def test_06_raw_aql_and_object_conversion(self):
+        db = self._get_db_obj()
+        db.create_collection(Person)
+        db.add(Person(name='test1', cnic='12312', dob=date(year=2016, month=9, day=12)))
+        db.add(Person(name='test2', cnic='22312', dob=date(year=2015, month=9, day=12)))
+
+        persons = [Person._load(p) for p in db.aql.execute("FOR p IN persons RETURN p")]
+
+        assert len(persons) == 2
+        assert isinstance(persons[0], Person)
+
+        db.drop_collection(Person)

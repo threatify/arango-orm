@@ -36,4 +36,3 @@ class Query(object):
 
         #print([student['name'] for student in result])
         return ret
-
