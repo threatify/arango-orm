@@ -13,23 +13,19 @@ from arango_orm.query import Query
 
 class TestQuery(TestBase):
 
-    def _get_db_obj(self):
-
-        test_db = self.get_db()
-        db = Database(test_db)
-
-        return db
-
-    def _create_persons_collection(self):
-
-        db = self._get_db_obj()
+    @classmethod
+    def setUpClass(cls):
+        db = cls._get_db_obj()
         db.create_collection(Person)
+
+    @classmethod
+    def tearDownClass(cls):
+        db = cls._get_db_obj()
+        db.drop_collection(Person)
 
     def test_01_get_count(self):
 
         db = self._get_db_obj()
-
-        self._create_persons_collection()
 
         count_1 = db.query(Person).count()
         assert count_1 == 0
@@ -47,4 +43,9 @@ class TestQuery(TestBase):
         assert len(persons) == 2
         assert isinstance(persons[0], Person)
 
-        db.drop_collection(Person)
+    def test_03_get_records_by_aql(self):
+        db = self._get_db_obj()
+        persons = db.query(Person).aql("FOR rec IN @@collection RETURN rec")
+
+        assert len(persons) == 2
+        assert isinstance(persons[0], Person)

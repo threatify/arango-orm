@@ -1,10 +1,13 @@
 """
 A wrapper around python-arango's database class adding some SQLAlchemy like ORM methods to it.
 """
+import logging
 from inspect import isclass
 
 from arango.database import Database as ArangoDatabase
 from .collections import CollectionBase
+
+log = logging.getLogger(__name__)
 
 
 class Query(object):
@@ -36,3 +39,17 @@ class Query(object):
 
         #print([student['name'] for student in result])
         return ret
+
+    def aql(self, query, **kwargs):
+        """
+        Return results based on given AQL query. bind_vars already contain @@collection param.
+        Query should always refer to the current collection using @collection
+        """
+
+        if 'bind_vars' in kwargs:
+            kwargs['bind_vars'].update(self._bind_vars)
+        else:
+            kwargs['bind_vars'] = self._bind_vars
+
+        log.warning(kwargs)
+        return [self._CollectionClass._load(rec) for rec in self._db.aql.execute(query, **kwargs)]

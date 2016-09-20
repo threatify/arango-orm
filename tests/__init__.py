@@ -1,6 +1,7 @@
 import unittest
 import logging
 from arango import ArangoClient
+from arango_orm.database import Database
 
 log = logging.getLogger(__name__)
 
@@ -9,14 +10,24 @@ class TestBase(unittest.TestCase):
 
     client = None
 
-    def get_client(self):
-        if self.client is None:
-            self.client = ArangoClient(username='test', password='test')
+    @classmethod
+    def get_client(cls):
+        if cls.client is None:
+            cls.client = ArangoClient(username='test', password='test')
 
-        return self.client
+        return cls.client
 
-    def get_db(self):
-        return self.get_client().db('test')
+    @classmethod
+    def get_db(cls):
+        return cls.get_client().db('test')
+
+    @classmethod
+    def _get_db_obj(cls):
+
+        test_db = cls.get_db()
+        db = Database(test_db)
+
+        return db
 
     def assert_all_in(self, keys, collection, exp_to_raise=AssertionError):
         "Assert that all given keys are present in the given collection, dict, list or tuple"

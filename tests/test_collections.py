@@ -11,12 +11,6 @@ from arango_orm.collections import Collection
 
 class TestCollection(TestBase):
 
-    def _get_db_obj(self):
-
-        test_db = self.get_db()
-        db = Database(test_db)
-
-        return db
 
     def test_01_object_from_dict(self):
 
