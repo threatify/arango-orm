@@ -71,7 +71,7 @@ class TestDatabase(TestBase):
 
         db = self._get_db_obj()
 
-        p = Person(name='temp', cnic='73mp', dob=date(year=2016, month=9, day=12))
+        p = Person(name='temp', cnic='73', dob=date(year=2016, month=9, day=12))
         db.add(p)
 
         count_1 = db.query(Person).count()
@@ -82,7 +82,18 @@ class TestDatabase(TestBase):
 
         assert count_2 == count_1 - 1
 
-    def test_07_raw_aql_and_object_conversion(self):
+    def test_07_update_records(self):
+
+        db = self._get_db_obj()
+
+        p = db.query(Person).by_key("12312")
+        p.name = 'Anonymous'
+        db.update(p)
+
+        p = db.query(Person).by_key("12312")
+        assert 'Anonymous' == p.name
+
+    def test_08_raw_aql_and_object_conversion(self):
         db = self._get_db_obj()
 
         db.add(Person(name='test1', cnic='12345', dob=date(year=2016, month=9, day=12)))

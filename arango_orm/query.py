@@ -26,6 +26,13 @@ class Query(object):
 
         return self._db.collection(self._CollectionClass.__collection__).count()
 
+    def by_key(self, key, **kwargs):
+        "Return a single document using it's key"
+
+        doc_dict = self._db.collection(self._CollectionClass.__collection__).get(key, **kwargs)
+        log.warning(doc_dict)
+        return self._CollectionClass._load(doc_dict)
+
     def all(self):
         "Return all records considering current filter conditions (if any)"
 
@@ -37,7 +44,6 @@ class Query(object):
         for rec in results:
             ret.append(self._CollectionClass._load(rec))
 
-        #print([student['name'] for student in result])
         return ret
 
     def aql(self, query, **kwargs):
@@ -51,5 +57,4 @@ class Query(object):
         else:
             kwargs['bind_vars'] = self._bind_vars
 
-        log.warning(kwargs)
         return [self._CollectionClass._load(rec) for rec in self._db.aql.execute(query, **kwargs)]

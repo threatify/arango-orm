@@ -52,8 +52,15 @@ class Database(ArangoDatabase):
 
     def delete(self, entity, **kwargs):
         "Delete given document"
+
         collection = self._db.collection(entity.__collection__)
         return collection.delete(entity._dump(), **kwargs)
+
+    def update(self, entity, **kwargs):
+        "Update given document"
+
+        collection = self._db.collection(entity.__collection__)
+        return collection.update(entity._dump(), **kwargs)
 
     def query(self, CollectionClass):
         "Query given collection"

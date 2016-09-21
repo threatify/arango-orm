@@ -49,3 +49,9 @@ class TestQuery(TestBase):
 
         assert len(persons) == 2
         assert isinstance(persons[0], Person)
+
+    def test_04_get_by_key(self):
+        db = self._get_db_obj()
+
+        p = db.query(Person).by_key("12312")
+        assert p.name == 'test1'
