@@ -50,6 +50,11 @@ class Database(ArangoDatabase):
         collection = self._db.collection(entity.__collection__)
         return collection.insert(entity._dump())
 
+    def delete(self, entity, **kwargs):
+        "Delete given document"
+        collection = self._db.collection(entity.__collection__)
+        return collection.delete(entity._dump(), **kwargs)
+
     def query(self, CollectionClass):
         "Query given collection"
 
