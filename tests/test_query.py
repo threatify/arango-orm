@@ -107,3 +107,86 @@ class TestQuery(TestBase):
         assert results[0].make in ['Honda', 'Mitsubishi']
         assert results[0].model in ['Civic', 'Lancer']
         assert results[0].year in [1984, 2005]
+
+    def test_09_limit_records(self):
+        db = self._get_db_obj()
+
+        records = db.query(Car).limit(5).all()
+
+        assert len(records) == 5
+        assert isinstance(records[0], Car)
+
+        # we'll get only 2 records since we have total of 7 records
+        records = db.query(Car).limit(3, 5).all()
+
+        assert len(records) == 2
+        assert isinstance(records[0], Car)
+
+    def test_10_sort_records(self):
+        db = self._get_db_obj()
+
+        records = db.query(Car).sort("year DESC").all()
+
+        assert isinstance(records[0], Car)
+        assert 2005 == records[0].year
+
+        records = db.query(Car).sort("year").all()
+
+        assert isinstance(records[0], Car)
+        assert 1984 == records[0].year
+
+    def test_11_multiple_sort(self):
+
+        db = self._get_db_obj()
+
+        records = db.query(Car).sort("make").sort("year DESC").all()
+
+        assert isinstance(records[0], Car)
+        assert 2001 == records[0].year
+        assert "Honda" == records[0].make
+        assert "Civic" == records[0].model
+
+        assert isinstance(records[4], Car)
+        assert 2005 == records[4].year
+        assert "Mitsubishi" == records[4].make
+        assert "Lancer" == records[4].model
+
+        assert isinstance(records[6], Car)
+        assert 1988 == records[6].year
+        assert "Toyota" == records[6].make
+        assert "Corolla" == records[6].model
+
+    def test_12_sort_and_limit_records(self):
+        db = self._get_db_obj()
+
+        records = db.query(Car).sort("year DESC").limit(2).all()
+
+        assert 2 == len(records)
+
+        assert isinstance(records[0], Car)
+        assert 2005 == records[0].year
+        assert "Mitsubishi" == records[0].make
+        assert "Lancer" == records[0].model
+
+        assert isinstance(records[1], Car)
+        assert 2004 == records[1].year
+        assert "Toyota" == records[1].make
+        assert "Corolla" == records[1].model
+
+    def test_13_filter_sort_and_limit_records(self):
+
+        db = self._get_db_obj()
+
+        records = db.query(Car).filter("year>=2000").sort("year ASC").limit(2).all()
+
+        assert 2 == len(records)
+
+        assert isinstance(records[0], Car)
+        assert 2001 == records[0].year
+        assert "Honda" == records[0].make
+        assert "Civic" == records[0].model
+
+        assert isinstance(records[1], Car)
+        assert 2004 == records[1].year
+        assert "Toyota" == records[1].make
+        assert "Corolla" == records[1].model

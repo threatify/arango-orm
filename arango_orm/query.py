@@ -21,6 +21,9 @@ class Query(object):
         self._CollectionClass = CollectionClass
         self._bind_vars = {'@collection': self._CollectionClass.__collection__}
         self._filter_conditions = []
+        self._sort_columns = []
+        self._limit = None
+        self._limit_start_record = 0
 
     def count(self):
         "Return collection count"
@@ -50,11 +53,20 @@ class Query(object):
 
         return self
 
-    def sort(self, col_name, descending=False):
+    def sort(self, col_name):
+        "Add a sort condition, sorting order of ASC or DESC can be provided after col_name and a space"
+
+        self._sort_columns.append(col_name)
 
         return self
 
     def limit(self, num_records, start_from=0):
+
+        assert isinstance(num_records, int)
+        assert isinstance(start_from, int)
+
+        self._limit = num_records
+        self._limit_start_record = start_from
 
         return self
 
@@ -62,7 +74,7 @@ class Query(object):
         "Make AQL statement from filter, sort and limit expressions"
 
         # Order => FILTER, SORT, LIMIT
-        aql = 'FOR rec IN @@collection '
+        aql = 'FOR rec IN @@collection\n'
 
         # Process filter conditions
 
@@ -75,6 +87,19 @@ class Query(object):
 
             line += 'rec.' + fc['condition']
             aql += line + ' '
+
+        # Process Sort
+        if self._sort_columns:
+            aql += '\n SORT'
+
+            for sc in self._sort_columns:
+                aql += ' rec.' + sc + ','
+
+            aql = aql[:-1]
+
+        # Process Limit
+        if self._limit:
+            aql += "\n LIMIT {}, {} ".format(self._limit_start_record, self._limit)
 
         return aql
 
@@ -89,7 +114,7 @@ class Query(object):
 
         aql = self._make_aql()
 
-        aql += ' RETURN rec'
+        aql += '\n RETURN rec'
         print(aql)
 
         results = self._db.aql.execute(aql, bind_vars=self._bind_vars)
