@@ -2,7 +2,7 @@
 
 from datetime import date
 from . import TestBase
-from .data import Person
+from .data import Person, Car, cars
 from arango import ArangoClient
 from arango.collections.base import CollectionStatisticsError
 
@@ -17,11 +17,18 @@ class TestQuery(TestBase):
     def setUpClass(cls):
         db = cls._get_db_obj()
         db.create_collection(Person)
+        db.create_collection(Car)
 
     @classmethod
     def tearDownClass(cls):
         db = cls._get_db_obj()
         db.drop_collection(Person)
+        db.drop_collection(Car)
+
+    def _populate_cars(self):
+        db = self._get_db_obj()
+        for car in cars:
+            db.add(car)
 
     def test_01_get_count(self):
 
@@ -55,3 +62,48 @@ class TestQuery(TestBase):
 
         p = db.query(Person).by_key("12312")
         assert p.name == 'test1'
+
+    def test_05_test_filter_condition(self):
+
+        self._populate_cars()
+        db = self._get_db_obj()
+
+        results = db.query(Car).filter("year==2005").all()
+
+        assert 1 == len(results) 
+        assert "Mitsubishi" == results[0].make
+        assert "Lancer" == results[0].model
+        assert 2005 == results[0].year
+
+    def test_06_test_filter_condition_using_bind_vars(self):
+
+        db = self._get_db_obj()
+
+        results = db.query(Car).filter("year==@year", year=2005).all()
+
+        assert 1 == len(results) 
+        assert "Mitsubishi" == results[0].make
+        assert "Lancer" == results[0].model
+        assert 2005 == results[0].year
+
+    def test_07_multiple_filter_conditions(self):
+        db = self._get_db_obj()
+
+        results = db.query(Car).filter("make==@make", make='Honda').filter("year<=@year", year=1990).all()
+
+        assert 1 == len(results) 
+        assert "Honda" == results[0].make
+        assert "Civic" == results[0].model
+        assert 1984 == results[0].year
+
+    def test_08_filter_or_conditions(self):
+        db = self._get_db_obj()
+
+        results = db.query(Car).filter(
+            "make==@make", make='Mitsubishi').filter(
+            "year<=@year", _or=True, year=1987).all()
+
+        assert 2 == len(results) 
+        assert results[0].make in ['Honda', 'Mitsubishi']
+        assert results[0].model in ['Civic', 'Lancer']
+        assert results[0].year in [1984, 2005]

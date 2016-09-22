@@ -16,6 +16,7 @@ db = Database(test_db)
 from tests.data import Car
 lancer = Car(make='Mitsubishi', model='Lancer', year=2005)
 db.add(lancer)
+lancer._dump()
 
 class Person(Collection):
     __collection__ = 'persons'

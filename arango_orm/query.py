@@ -38,21 +38,45 @@ class Query(object):
         """
         Filter the results based on given condition. By default filter conditions are joined
         by AND operator if this method is called multiple times. If you want to use the OR operator
-        then try using it within the condition string or specify _or=True
+        then specify _or=True
         """
 
         joiner = None
-        if len(self._filter_conditions) > 1:
+        if len(self._filter_conditions) > 0:
             joiner = 'OR' if _or else 'AND'
 
         self._filter_conditions.append(dict(condition=condition, joiner=joiner))
         self._bind_vars.update(kwargs)
 
+        return self
+
     def sort(self, col_name, descending=False):
-        pass
+
+        return self
 
     def limit(self, num_records, start_from=0):
-        pass
+
+        return self
+
+    def _make_aql(self):
+        "Make AQL statement from filter, sort and limit expressions"
+
+        # Order => FILTER, SORT, LIMIT
+        aql = 'FOR rec IN @@collection '
+
+        # Process filter conditions
+
+        for fc in self._filter_conditions:
+            line = ""
+            if fc['joiner'] is None:
+                line = "FILTER "
+            else:
+                line = fc['joiner'] + ' '
+
+            line += 'rec.' + fc['condition']
+            aql += line + ' '
+
+        return aql
 
     def update(self, **kwargs):
         pass
@@ -63,7 +87,10 @@ class Query(object):
     def all(self):
         "Return all records considering current filter conditions (if any)"
 
-        aql = 'FOR rec IN @@collection RETURN rec'
+        aql = self._make_aql()
+
+        aql += ' RETURN rec'
+        print(aql)
 
         results = self._db.aql.execute(aql, bind_vars=self._bind_vars)
         ret = []

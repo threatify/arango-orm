@@ -22,3 +22,14 @@ class Car(Collection):
         make = String(required=True)
         model = String(required=True)
         year = Integer(required=True)
+
+
+cars = [
+    Car(make="Honda", model="Civic", year=1984),
+    Car(make="Honda", model="Civic", year=1995),
+    Car(make="Honda", model="Civic", year=1998),
+    Car(make="Honda", model="Civic", year=2001),
+    Car(make="Toyota", model="Corolla", year=1988),
+    Car(make="Toyota", model="Corolla", year=2004),
+    Car(make="Mitsubishi", model="Lancer", year=2005)
+]
