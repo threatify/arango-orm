@@ -20,6 +20,7 @@ class Query(object):
         self._db = db
         self._CollectionClass = CollectionClass
         self._bind_vars = {'@collection': self._CollectionClass.__collection__}
+        self._filter_conditions = []
 
     def count(self):
         "Return collection count"
@@ -32,6 +33,32 @@ class Query(object):
         doc_dict = self._db.collection(self._CollectionClass.__collection__).get(key, **kwargs)
         log.warning(doc_dict)
         return self._CollectionClass._load(doc_dict)
+
+    def filter(self, condition, _or=False, **kwargs):
+        """
+        Filter the results based on given condition. By default filter conditions are joined
+        by AND operator if this method is called multiple times. If you want to use the OR operator
+        then try using it within the condition string or specify _or=True
+        """
+
+        joiner = None
+        if len(self._filter_conditions) > 1:
+            joiner = 'OR' if _or else 'AND'
+
+        self._filter_conditions.append(dict(condition=condition, joiner=joiner))
+        self._bind_vars.update(kwargs)
+
+    def sort(self, col_name, descending=False):
+        pass
+
+    def limit(self, num_records, start_from=0):
+        pass
+
+    def update(self, **kwargs):
+        pass
+
+    def delete(self):
+        pass
 
     def all(self):
         "Return all records considering current filter conditions (if any)"
@@ -48,13 +75,13 @@ class Query(object):
 
     def aql(self, query, **kwargs):
         """
-        Return results based on given AQL query. bind_vars already contain @@collection param.
+        Return results based on given AQL query. bind_vars already contains @@collection param.
         Query should always refer to the current collection using @collection
         """
 
         if 'bind_vars' in kwargs:
-            kwargs['bind_vars'].update(self._bind_vars)
+            kwargs['bind_vars']['@collection'] = self._bind_vars['@collection']
         else:
-            kwargs['bind_vars'] = self._bind_vars
+            kwargs['bind_vars'] = {'@collection': self._bind_vars['@collection']}
 
         return [self._CollectionClass._load(rec) for rec in self._db.aql.execute(query, **kwargs)]

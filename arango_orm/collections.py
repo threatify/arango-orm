@@ -71,32 +71,21 @@ class Collection(CollectionBase):
 
             setattr(new_obj, k, v)
 
-        # Set key field
-        if cls._key_field is not None and hasattr(new_obj, cls._key_field):
-            setattr(new_obj, '_key', getattr(new_obj, cls._key_field))
+        if '_key' in in_dict and not hasattr(new_obj, '_key'):
+            setattr(new_obj, '_key', in_dict['_key'])
 
         return new_obj
 
-    def _dump(self):
+    def _dump(self, **kwargs):
         "Dump all object attributes into a dict"
 
-        # rdict = {}
-        # for item in dir(self):
-        #     if item in self._safe_list or callable(getattr(self, item)):
-        #         continue
-        # 
-        #     rdict[item] = getattr(self, item)
-        # 
-        # return rdict
-
-        data, errors = self._Schema().dump(self)
+        data, errors = self._Schema(**kwargs).dump(self)
         if errors:
             raise RuntimeError("Error dumping object of collection {} - {}".format(
                 self.__class__.__name__, errors))
 
-        # Set _key
-        if self._key_field is not None and hasattr(self, self._key_field):
-            data['_key'] = data[self._key_field]
+        if '_key' not in data and hasattr(self, '_key'):
+            data['_key'] = getattr(self, '_key')
 
         return data
 

@@ -48,13 +48,17 @@ class Database(ArangoDatabase):
         "Add a record to a collection"
 
         collection = self._db.collection(entity.__collection__)
-        return collection.insert(entity._dump())
+        res = collection.insert(entity._dump())
+        if not hasattr(entity, '_key') and '_key' in res:
+            setattr(entity, '_key', res['_key'])
+
+        return res
 
     def delete(self, entity, **kwargs):
         "Delete given document"
 
         collection = self._db.collection(entity.__collection__)
-        return collection.delete(entity._dump(), **kwargs)
+        return collection.delete(entity._dump(only=('_key', ))['_key'], **kwargs)
 
     def update(self, entity, **kwargs):
         "Update given document"

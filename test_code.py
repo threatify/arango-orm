@@ -13,27 +13,29 @@ test_db = client.db('test')
 
 db = Database(test_db)
 
+from tests.data import Car
+lancer = Car(make='Mitsubishi', model='Lancer', year=2005)
+db.add(lancer)
 
 class Person(Collection):
     __collection__ = 'persons'
 
     class _Schema(Schema):
-        cnic = String(required=True)
+        _key = String(required=True)
         name = String(required=True, allow_none=False)
         dob = Date()
 
-    _key_field = 'cnic'
 
 
 db.query(Person).count()
 db.query(Person).all()
 
-p = Person(name='test', cnic='12312', dob=date(year=2016, month=9, day=12))
+p = Person(name='test', _key='12312', dob=date(year=2016, month=9, day=12))
 db.add(p)
 db.query(Person).count()
 
 
-pd = {'cnic': '37405-4564665-7', 'dob': '2016-09-12', 'name': 'Kashif Iftikhar'}
+pd = {'_key': '37405-4564665-7', 'dob': '2016-09-12', 'name': 'Kashif Iftikhar'}
 data, errors = Person._Schema().load(pd)
 new_person = Person._load(pd)
 

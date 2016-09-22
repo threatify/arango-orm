@@ -2,7 +2,7 @@
 
 from datetime import date
 from . import TestBase
-from .person import Person
+from .data import Person
 from arango import ArangoClient
 from arango.collections.base import CollectionStatisticsError
 
@@ -34,8 +34,8 @@ class TestQuery(TestBase):
         db = self._get_db_obj()
 
         count_1 = db.query(Person).count()
-        db.add(Person(name='test1', cnic='12312', dob=date(year=2016, month=9, day=12)))
-        db.add(Person(name='test2', cnic='22312', dob=date(year=2015, month=9, day=12)))
+        db.add(Person(name='test1', _key='12312', dob=date(year=2016, month=9, day=12)))
+        db.add(Person(name='test2', _key='22312', dob=date(year=2015, month=9, day=12)))
 
         assert db.query(Person).count() == count_1 + 2
 
