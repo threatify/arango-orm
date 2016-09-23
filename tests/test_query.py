@@ -190,3 +190,19 @@ class TestQuery(TestBase):
         assert 2004 == records[1].year
         assert "Toyota" == records[1].make
         assert "Corolla" == records[1].model
+
+    def test_16_delete_some_records(self):
+
+        db = self._get_db_obj()
+
+        db.query(Car).limit(2).delete()
+
+        assert 5 == db.query(Car).count()
+
+    def test_17_delete_all_records(self):
+
+        db = self._get_db_obj()
+
+        db.query(Car).delete()
+
+        assert 0 == db.query(Car).count()

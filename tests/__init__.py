@@ -5,6 +5,7 @@ from arango_orm.database import Database
 
 log = logging.getLogger(__name__)
 
+
 class TestBase(unittest.TestCase):
     "Base class for test cases (unit tests)"
 

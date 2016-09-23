@@ -106,8 +106,16 @@ class Query(object):
     def update(self, **kwargs):
         pass
 
-    def delete(self):
-        pass
+    def delete(self, wait_for_sync=True, ignore_errors=False):
+
+        options = " OPTIONS {waitForSync: %s, ignoreErrors: %s}" % \
+                  (str(wait_for_sync).lower(), str(ignore_errors).lower())
+
+        aql = self._make_aql()
+
+        aql += "\n REMOVE {_key: rec._key} IN @@collection" + options
+
+        return self._db.aql.execute(aql, bind_vars=self._bind_vars)
 
     def all(self):
         "Return all records considering current filter conditions (if any)"
