@@ -13,7 +13,10 @@ test_db = client.db('test')
 
 db = Database(test_db)
 
-from tests.data import Car
+from tests.data import Person, Car, cars
+
+db.query(Car).filter("model==@model", model='Civic').update(model='CIVIC', make='HONDA')
+
 lancer = Car(make='Mitsubishi', model='Lancer', year=2005)
 db.add(lancer)
 lancer._dump()

@@ -103,8 +103,35 @@ class Query(object):
 
         return aql
 
-    def update(self, **kwargs):
-        pass
+    def update(self, wait_for_sync=True, ignore_errors=False, **kwargs):
+
+        options = " OPTIONS {waitForSync: %s, ignoreErrors: %s}" % \
+                  (str(wait_for_sync).lower(), str(ignore_errors).lower())
+
+        aql = self._make_aql()
+
+        # Since we might already have the normal field names in self._bind_vars from filter
+        # condition(s) we'll store the update variables with a different prefix "_up_" to avoid
+        # field name collisions
+
+        update_clause = ''
+
+        # we'll need to marshal the update values using marshmallow so we create a new collection
+        # object with kwargs
+        up_obj = self._CollectionClass(**kwargs)
+
+        for k, v in kwargs.items():
+            update_clause += '{k}: @_up_{k},'.format(k=k)
+            self._bind_vars['_up_' + k] = up_obj._dump(only=(k, ))[k]
+
+        if len(update_clause) > 0:
+            update_clause = update_clause[:-1]
+
+        aql += "\n UPDATE {_key: rec._key} WITH {%s} IN @@collection" % update_clause + options
+        log.critical(aql)
+        log.critical(self._bind_vars)
+
+        return self._db.aql.execute(aql, bind_vars=self._bind_vars)
 
     def delete(self, wait_for_sync=True, ignore_errors=False):
 

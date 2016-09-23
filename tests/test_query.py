@@ -191,7 +191,46 @@ class TestQuery(TestBase):
         assert "Toyota" == records[1].make
         assert "Corolla" == records[1].model
 
-    def test_16_delete_some_records(self):
+    def test_14_update_filtered_records(self):
+
+        db = self._get_db_obj()
+
+        db.query(Car).filter("model==@model", model='Civic').update(model='CIVIC', make='HONDA')
+
+        records = db.query(Car).filter("make=='HONDA'").filter("model=='CIVIC'").all()
+
+        assert 7 == db.query(Car).count()
+        assert 4 == len(records)
+
+    def test_15_update_some_records(self):
+
+        db = self._get_db_obj()
+
+        db.query(Car).sort("year DESC").limit(2).update(make='NEW MAKE')
+
+        records = db.query(Car).sort("year DESC").limit(2).all()
+
+        assert isinstance(records[0], Car)
+        assert 2005 == records[0].year
+        assert "NEW MAKE" == records[0].make
+        assert "Lancer" == records[0].model
+
+        assert isinstance(records[1], Car)
+        assert 2004 == records[1].year
+        assert "NEW MAKE" == records[1].make
+        assert "Corolla" == records[1].model 
+
+    def test_16_update_all_records(self):
+
+        db = self._get_db_obj()
+
+        db.query(Person).update(name='Anonymous')
+
+        persons = db.query(Person).all()
+        for person in persons:
+            assert person.name == 'Anonymous'
+
+    def test_17_delete_some_records(self):
 
         db = self._get_db_obj()
 
@@ -199,7 +238,7 @@ class TestQuery(TestBase):
 
         assert 5 == db.query(Car).count()
 
-    def test_17_delete_all_records(self):
+    def test_18_delete_all_records(self):
 
         db = self._get_db_obj()
 
