@@ -5,62 +5,44 @@ from marshmallow import (
     validates, fields, ValidationError
 )
 
-class NodeBase(object):
-    pass
+from arango import ArangoClient
+from arango_orm.database import Database
 
-class Node(NodeBase):
-    pass
-
-
-class Link(NodeBase):
-    pass
+from arango_orm.collections import Collection, Relation
+from arango_orm.graph import Graph, GraphConnection
 
 
-class GraphConnection(object):
-    pass
-
-
-class Graph(object):
-    pass
-
-
-class Student(Node):
+class Student(Collection):
 
     __collection__ = 'students'
 
     class _Schema(Schema):
-        registration_number = String(required=True)
+        _key = String(required=True)  # registration number
         name = String(required=True, allow_none=False)
         age = Integer()
 
-    _key = _Schema.registration_number
 
-
-class Teacher(Node):
+class Teacher(Collection):
 
     __collection__ = 'teachers'
 
     class _Schema(Schema):
-        employee_id = String(required=True)
+        _key = String(required=True)  # employee id
         name = String(required=True)
 
-    _key = _Schema.employee_id
 
-
-class Subject(Node):
+class Subject(Collection):
 
     __collection__ = 'subjects'
 
     class _Schema(Schema):
-        code = String(required=True)
+        _key = String(required=True)  # subject code
         name = String(required=True)
         credit_hours = Integer()
         has_labs = Boolean(missing=True)
 
-    _key = _Schema.code
 
-
-class SpecializesIn(Link):
+class SpecializesIn(Relation):
 
     __collection__ = 'specializes_in'
 
@@ -68,19 +50,35 @@ class SpecializesIn(Link):
         expertise_level = String(options=["expert", "intermediate", "basic"])
 
 
+class Area(Collection):
+
+    __collection__ = 'areas'
+
+    class _Schema(Schema):
+        name = String(required=True)
+
+
 class UniversityGraph(Graph):
 
     __graph__ = 'university_graph'
-    graph = [
-        # Using generic classes
-        GraphConnection(Student, Link("has"), Node("address")),
-        GraphConnection(Node("address"), Link("belongs_to"), Node("city")),
-        GraphConnection(Node("city"), Link("belongs_to"), Node("country")),
-        # Using general Link class for relationship
-        GraphConnection(Student, Link("studies"), Subject),
-        GraphConnection(Teacher, Link("teaches"), Subject),
+
+    graph_connections = [
+        # Using general Relation class for relationship
+        GraphConnection(Student, Relation("studies"), Subject),
+        GraphConnection(Teacher, Relation("teaches"), Subject),
 
         # Using specific classes for vertex and edges
         GraphConnection(Teacher, SpecializesIn, Subject),
+        GraphConnection([Teacher, Student], Relation("resides_in"), Area)
 
     ]
+
+
+if '__main__' == __name__:
+
+    uni_graph = UniversityGraph()
+    client = ArangoClient(username='test', password='test')
+    test_db = client.db('test')
+
+    db = Database(test_db)
+    db.create_graph(uni_graph)

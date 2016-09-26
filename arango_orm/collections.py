@@ -90,11 +90,33 @@ class Collection(CollectionBase):
         return data
 
 
-class Node(Collection):
+class Relation(Collection):
 
-    pass
+    _safe_list = ['__collection__', '_safe_list', '_collections_from', '_collections_to']
 
+    def __init__(self, collection_name=None, **kwargs):
 
-class Link(Collection):
+        if '_collections_from' in kwargs:
+            self._collections_from = kwargs['_collections_from']
+        else:
+            self._collections_from = None
 
-    pass
+        if '_collections_to' in kwargs:
+            self._collections_to = kwargs['_collections_to']
+        else:
+            self._collections_to = None
+
+        super().__init__(collection_name=collection_name, **kwargs)
+
+    def __str__(self):
+        ret = "<" + self.__class__.__name__ + '('
+
+        if hasattr(self, '_key'):
+            ret += "_key=" + getattr(self, '_key')
+
+        if hasattr(self, '_from') and hasattr(self, '_to'):
+            ret += ", _from={}, _to={}".format(getattr(self, '_from'), getattr(self, '_to'))
+
+        ret += ")>"
+
+        return ret

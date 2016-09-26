@@ -20,7 +20,7 @@ class Database(ArangoDatabase):
         super(Database, self).__init__(db._conn)
 
     def _verify_collection(self, col):
-        "Verifies the give collection class or object of a collection class"
+        "Verifies that col is a collection class or object of a collection class"
 
         if isclass(col):
             assert issubclass(col, CollectionBase)
@@ -70,3 +70,41 @@ class Database(ArangoDatabase):
         "Query given collection"
 
         return Query(CollectionClass, self)
+
+    def create_graph(self, graph_object):
+        "Create a named graph from given graph object"
+
+        graph_edge_definitions = []
+
+        for _, relation_obj in graph_object.edges.items():
+
+            cols_from = []
+            cols_to = []
+
+            if isinstance(relation_obj._collections_from, (list, tuple)):
+                cols_from = relation_obj._collections_from
+            else:
+                cols_from = [relation_obj._collections_from, ]
+
+            if isinstance(relation_obj._collections_to, (list, tuple)):
+                cols_to = relation_obj._collections_to
+            else:
+                cols_to = [relation_obj._collections_to, ]
+
+            from_col_names = [col.__collection__ for col in cols_from]
+            to_col_names = [col.__collection__ for col in cols_to]
+
+            graph_edge_definitions.append({
+                'name': relation_obj.__collection__,
+                'from_collections': from_col_names,
+                'to_collections': to_col_names
+            })
+
+        self._db.create_graph(graph_object.__graph__, graph_edge_definitions)
+
+    def drop_graph(self, graph_object, drop_collections=True):
+        """
+        Drop a graph, if drop_collections is True, drop all vertices and edges too
+        """
+
+        pass
