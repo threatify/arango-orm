@@ -1,3 +1,4 @@
+import sys
 from marshmallow.fields import List, String, UUID, Integer, Boolean, DateTime
 from marshmallow.validate import ContainsOnly, NoneOf, OneOf
 from marshmallow import (
@@ -76,9 +77,28 @@ class UniversityGraph(Graph):
 
 if '__main__' == __name__:
 
+    usage = """
+Usage: {} action
+
+Supported actions are:
+
+create_graph - Create the graph and all it's vertices and edges
+drop_graph - Drop the graph and all it's vertices and edges
+""".format(sys.argv[0])
+
     uni_graph = UniversityGraph()
     client = ArangoClient(username='test', password='test')
     test_db = client.db('test')
 
     db = Database(test_db)
-    db.create_graph(uni_graph)
+
+    if len(sys.argv) > 1:
+        if 'create_graph' == sys.argv[1]:
+            db.create_graph(uni_graph)
+
+        elif 'drop_graph' == sys.argv[1]:
+            db.drop_graph(uni_graph)
+
+    else:
+
+        print(usage)

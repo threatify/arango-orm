@@ -107,4 +107,13 @@ class Database(ArangoDatabase):
         Drop a graph, if drop_collections is True, drop all vertices and edges too
         """
 
-        pass
+        graph = self._db.graph(graph_object.__graph__)
+
+        if drop_collections:
+            for col in graph_object.edges:
+                graph.delete_edge_definition(col, purge=True)
+
+            for col in graph_object.vertices:
+                graph.delete_vertex_collection(col, purge=True)
+
+        self._db.delete_graph(graph_object.__graph__)
