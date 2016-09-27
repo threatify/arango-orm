@@ -48,7 +48,7 @@ class SpecializesIn(Relation):
     __collection__ = 'specializes_in'
 
     class _Schema(Schema):
-        expertise_level = String(options=["expert", "intermediate", "basic"])
+        expertise_level = String(options=["expert", "medium", "basic"])
 
 
 class Area(Collection):
@@ -74,6 +74,29 @@ class UniversityGraph(Graph):
 
     ]
 
+
+students_data = [
+    Student(_key='S1001', name='John Wayne', age=30),
+    Student(_key='S1002', name='Lilly Parker', age=22),
+    Student(_key='S1003', name='Cassandra Nix', age=25),
+    Student(_key='S1004', name='Peter Parker', age=20)
+]
+
+teachers_data = [
+    Teacher(_key='T001', name='Bruce Wayne'),
+    Teacher(_key='T002', name='Barry Allen'),
+    Teacher(_key='T003', name='Amanda Waller')
+]
+
+subjects_data = [
+    Subject(_key='ITP101', name='Introduction to Programming', credit_hours=4, has_labs=True),
+    Subject(_key='CS102', name='Computer History', credit_hours=3, has_labs=False),
+    Subject(_key='CSOOP02', name='Object Oriented Programming', credit_hours=3, has_labs=True),
+]
+
+specializations_data = [
+    SpecializesIn(_from="teachers/T001", _to="subjects", expertise_level="medium")
+]
 
 if '__main__' == __name__:
 

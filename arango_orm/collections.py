@@ -92,7 +92,10 @@ class Collection(CollectionBase):
 
 class Relation(Collection):
 
-    _safe_list = ['__collection__', '_safe_list', '_collections_from', '_collections_to']
+    _safe_list = [
+        '__collection__', '_safe_list', '_collections_from', '_collections_to',
+        '_rel_from', '_rel_to'
+    ]
 
     def __init__(self, collection_name=None, **kwargs):
 
@@ -105,6 +108,15 @@ class Relation(Collection):
             self._collections_to = kwargs['_collections_to']
         else:
             self._collections_to = None
+
+        self._from = None
+        self._to = None
+
+        # if '_from' in kwargs:
+        #     self._from = kwargs['_from']
+        # 
+        # if '_to' in kwargs:
+        #     self._to = kwargs['_to']
 
         super().__init__(collection_name=collection_name, **kwargs)
 
@@ -120,3 +132,30 @@ class Relation(Collection):
         ret += ")>"
 
         return ret
+
+    @classmethod
+    def _load(cls, in_dict):
+        "Create object from given dict"
+
+        new_obj = Collection._load(in_dict)
+
+        if '_from' in in_dict and not hasattr(new_obj, '_from'):
+            setattr(new_obj, '_from', in_dict['_from'])
+
+        if '_to' in in_dict and not hasattr(new_obj, '_to'):
+            setattr(new_obj, '_to', in_dict['_to'])
+
+        return new_obj
+
+    def _dump(self, **kwargs):
+        "Dump all object attributes into a dict"
+
+        data = super()._dump(**kwargs)
+
+        if '_from' not in data and hasattr(self, '_from'):
+            data['_from'] = getattr(self, '_from')
+
+        if '_to' not in data and hasattr(self, '_to'):
+            data['_to'] = getattr(self, '_to')
+
+        return data

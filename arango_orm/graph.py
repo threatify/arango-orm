@@ -31,10 +31,11 @@ class Graph(object):
     __graph__ = None
     graph_connections = None
 
-    def __init__(self, graph_name=None, graph_connections=None):
+    def __init__(self, graph_name=None, graph_connections=None, connection=None):
 
         self.vertices = {}
         self.edges = {}
+        self._db = connection
 
         if graph_name is not None:
             self.__graph__ = graph_name
@@ -61,3 +62,14 @@ class Graph(object):
 
                 if gc.relation.__collection__ not in self.edges:
                     self.edges[gc.relation.__collection__] = gc.relation
+
+    def relation(self, relation_from, relation, relation_to):
+        """
+        Return relation (edge) object from given collection (relation_from and relation_to) and
+        edge/relation (relation) objects
+        """
+
+        relation._from = relation_from.__collection__ + '/' + relation_from._key
+        relation._to = relation_to.__collection__ + '/' + relation_to._key
+
+        return relation
