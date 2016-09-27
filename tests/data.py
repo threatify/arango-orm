@@ -79,7 +79,7 @@ class Area(Collection):
     __collection__ = 'areas'
 
     class _Schema(Schema):
-        name = String(required=True)
+        _key = String(required=True)  # area name
 
 
 class UniversityGraph(Graph):
@@ -115,6 +115,12 @@ subjects_data = [
     Subject(_key='ITP101', name='Introduction to Programming', credit_hours=4, has_labs=True),
     Subject(_key='CS102', name='Computer History', credit_hours=3, has_labs=False),
     Subject(_key='CSOOP02', name='Object Oriented Programming', credit_hours=3, has_labs=True),
+]
+
+areas_data = [
+    Area(_key="Gotham"),
+    Area(_key="Metropolis"),
+    Area(_key="StarCity")
 ]
 
 specializations_data = [
