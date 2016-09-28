@@ -31,7 +31,7 @@ class Collection(CollectionBase):
 
     __collection__ = None
 
-    _safe_list = ['__collection__', '_safe_list']
+    _safe_list = ['__collection__', '_safe_list', '_relations']
 
     def __init__(self, collection_name=None, **kwargs):
         if collection_name is not None:
@@ -94,7 +94,7 @@ class Relation(Collection):
 
     _safe_list = [
         '__collection__', '_safe_list', '_collections_from', '_collections_to',
-        '_rel_from', '_rel_to'
+        '_object_from', '_object_to'
     ]
 
     def __init__(self, collection_name=None, **kwargs):
@@ -111,6 +111,8 @@ class Relation(Collection):
 
         self._from = None
         self._to = None
+        self._object_from = None
+        self._object_to = None
 
         # if '_from' in kwargs:
         #     self._from = kwargs['_from']
@@ -137,12 +139,32 @@ class Relation(Collection):
     def _load(cls, in_dict):
         "Create object from given dict"
 
-        new_obj = Collection._load(in_dict)
+        data, errors = cls._Schema().load(in_dict)
+        if errors:
+            raise RuntimeError("Error loading object of relation {} - {}".format(
+                cls.__name__, errors))
 
-        if '_from' in in_dict and not hasattr(new_obj, '_from'):
+        new_obj = cls()
+
+        for k, v in data.items():
+            if k in cls._safe_list or (k in dir(cls) and callable(getattr(cls, k))):
+                raise MemberExistsException(
+                    "{} is already a member of {} instance and cannot be overwritten".format(
+                        k, cls.__name__))
+
+            setattr(new_obj, k, v)
+
+        if '_key' in in_dict and not hasattr(new_obj, '_key'):
+            setattr(new_obj, '_key', in_dict['_key'])
+
+        # new_obj = Collection._load(in_dict)
+
+        # new_obj.__class__ = cls
+
+        if '_from' in in_dict:
             setattr(new_obj, '_from', in_dict['_from'])
 
-        if '_to' in in_dict and not hasattr(new_obj, '_to'):
+        if '_to' in in_dict:
             setattr(new_obj, '_to', in_dict['_to'])
 
         return new_obj

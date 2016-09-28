@@ -36,6 +36,7 @@ class Graph(object):
         self.vertices = {}
         self.edges = {}
         self._db = connection
+        self._graph = None
 
         if graph_name is not None:
             self.__graph__ = graph_name
@@ -73,3 +74,66 @@ class Graph(object):
         relation._to = relation_to.__collection__ + '/' + relation_to._key
 
         return relation
+
+    def expand(self, doc_obj, direction='any', depth=1):
+        """
+        Expand all links of given direction (outbound, inbound, any) upto given length for
+        the given document object and update the object with the found relations
+        """
+
+        assert direction in ('any', 'inbound', 'outbound')
+
+        graph = self._db.graph(self.__graph__)
+        doc_id = doc_obj.__collection__ + '/' + doc_obj._key
+        results = graph.traverse(
+            start_vertex=doc_id,
+            direction=direction,
+            vertex_uniqueness='path',
+            min_depth=1, max_depth=depth
+        )
+
+        # {'edges': [
+        #     {'_from': 'teachers/T001',
+        #     '_id': 'teaches/3358463',
+        #     '_key': '3358463',
+        #     '_rev': '3358463',
+        #     '_to': 'subjects/CSOOP02'}
+        #     ],
+        #   'vertices': [
+        #     {'_id': 'teachers/T001',
+        #     '_key': 'T001',
+        #     '_rev': '3358372',
+        #     'name': 'Bruce Wayne'},
+        #    {'_id': 'subjects/CSOOP02',
+        #     '_key': 'CSOOP02',
+        #     '_rev': '3358389',
+        #     'credit_hours': 3,
+        #     'has_labs': True,
+        #     'name': 'Object Oriented Programming'}
+        #    ]
+        # }
+
+        # Create objects from vertices dicts
+        documents = {doc_id: doc_obj}
+        doc_obj._relations = {}
+
+        for v_dict in results['vertices']:
+            # Get ORM class for the collection
+            col_name = v_dict['_id'].split('/')[0]
+            CollectionClass = self.vertices[col_name]
+            obj = CollectionClass._load(v_dict)
+            documents[v_dict['_id']] = obj
+
+        for p_dict in results['paths']:
+            for e_dict in p_dict['edges']:
+                col_name = e_dict['_id'].split('/')[0]
+                if col_name not in doc_obj._relations:
+                    doc_obj._relations[col_name] = []
+
+                RelationClass = self.edges[col_name].__class__
+                rel = RelationClass._load(e_dict)
+                rel._object_from = documents[rel._from]
+                rel._object_to = documents[rel._to]
+                doc_obj._relations[col_name].append(rel)
+
+        return results['paths'], documents, doc_obj._relations

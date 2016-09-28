@@ -1,3 +1,25 @@
+from arango import ArangoClient
+from arango_orm.database import Database
+from arango_orm.collections import Collection
+from tests.data import (UniversityGraph, Student, Teacher, Subject, SpecializesIn, Area,
+                   teachers_data, students_data, subjects_data, specializations_data, areas_data)
+
+client = ArangoClient(username='test', password='test')
+test_db = client.db('test')
+
+db = Database(test_db)
+
+uni_graph = UniversityGraph(connection=db)
+
+bruce = db.query(Teacher).by_key("T001")
+
+traversal_results = db.graph('university_graph').traverse(start_vertex='teachers/T001', direction='any',
+                                       vertex_uniqueness='path', min_depth=1, max_depth=1)
+
+uni_graph.expand(bruce)
+
+
+###############################3
 from datetime import date
 from arango import ArangoClient
 from arango_orm.database import Database
@@ -12,6 +34,8 @@ client = ArangoClient(username='test', password='test')
 test_db = client.db('test')
 
 db = Database(test_db)
+
+
 
 from tests.data import Person, Car, cars
 
