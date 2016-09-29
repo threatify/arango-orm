@@ -1,5 +1,6 @@
 from inspect import isclass
 from .collections import Relation
+import pdb
 
 
 class GraphConnection(object):
@@ -85,6 +86,7 @@ class Graph(object):
 
         graph = self._db.graph(self.__graph__)
         doc_id = doc_obj._id
+        doc_obj._relations = {}  # clear any previous relations
         results = graph.traverse(
             start_vertex=doc_id,
             direction=direction,
@@ -126,19 +128,15 @@ class Graph(object):
 
         for p_dict in results['paths']:
 
+            # code below should be in a separate method/function???
+
             # Process each path as a unit
             # First edge's _from always points to our parent document
             print('------------')
             parent_id = doc_obj._id
 
-            # TODO: Fix the example given below, we might not need _object_from and _object_to within
-            # relations, instead we might just need link_object or link_object should point to the
-            # other side of the link
-
-            # In [8]: bruce._relations['specializes_in'][0]._object_to._relations['teaches'][0]._object_to.name
-            # Out[8]: 'Introduction to Programming'
-            # In [9]: bruce._relations['specializes_in'][0]._object_to._relations['teaches'][0]._object_from.name
-            # Out[9]: 'Barry Allen'
+            # if len(p_dict['edges']) > 2 and p_dict['edges'][0]['_id'].startswith('resides_in'):
+            #     pdb.set_trace()
 
             for e_dict in p_dict['edges']:
 
@@ -155,12 +153,11 @@ class Graph(object):
                     rel._object_to = documents[rel._to]
 
                 parent_object = None
-                print(parent_id)
-                print(rel)
                 if rel._from == parent_id:
                     parent_object = documents[rel._from]
                     rel._next = rel._object_to
                     parent_id = rel._to
+
                 elif rel._to == parent_id:
                     parent_object = documents[rel._to]
                     rel._next = rel._object_from
@@ -174,8 +171,11 @@ class Graph(object):
                 if col_name not in parent_object._relations:
                     parent_object._relations[col_name] = []
 
-                if rel._id not in relations_added:
+                if rel not in parent_object._relations[col_name]:
                     parent_object._relations[col_name].append(rel)
+
+                if rel._id not in relations_added:
                     relations_added[rel._id] = rel
 
-        return results['paths'], documents, doc_obj._relations
+
+        return results['paths'], doc_obj._relations

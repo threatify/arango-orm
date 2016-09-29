@@ -12,17 +12,19 @@ db = Database(test_db)
 uni_graph = UniversityGraph(connection=db)
 
 bruce = db.query(Teacher).by_key("T001")
+amanda = db.query(Teacher).by_key("T003")
 
 traversal_results = db.graph('university_graph').traverse(start_vertex='teachers/T001', direction='any',
                                        vertex_uniqueness='path', min_depth=1, max_depth=1)
+
+uni_graph.expand(amanda, depth=3)
 
 uni_graph.expand(bruce, depth=2)
 
 bruce._relations['specializes_in'][0]._object_to._relations['teaches'][0]._object_from.name
 bruce._relations['specializes_in'][0]._next._relations['teaches'][0]._next.name
 
-            
-            
+
 ###############################3
 from datetime import date
 from arango import ArangoClient
