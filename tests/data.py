@@ -89,7 +89,8 @@ class SpecializesIn(Relation):
         expertise_level = String(required=True, options=["expert", "medium", "basic"])
 
     def __str__(self):
-        return "<SpecializesIn(expertise_level={})>".format(self.expertise_level)
+        return "<SpecializesIn(_key={}, expertise_level={}, _from={}, _to={})>".format(
+            self._key, self.expertise_level, self._from, self._to)
 
 
 class Area(Collection):

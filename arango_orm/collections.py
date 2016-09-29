@@ -31,7 +31,7 @@ class Collection(CollectionBase):
 
     __collection__ = None
 
-    _safe_list = ['__collection__', '_safe_list', '_relations']
+    _safe_list = ['__collection__', '_safe_list', '_relations', '_id']
 
     def __init__(self, collection_name=None, **kwargs):
         if collection_name is not None:
@@ -74,6 +74,9 @@ class Collection(CollectionBase):
         if '_key' in in_dict and not hasattr(new_obj, '_key'):
             setattr(new_obj, '_key', in_dict['_key'])
 
+        if '_id' in in_dict:
+            new_obj.__collection__ = in_dict['_id'].split('/')[0]
+
         return new_obj
 
     def _dump(self, **kwargs):
@@ -89,11 +92,18 @@ class Collection(CollectionBase):
 
         return data
 
+    @property
+    def _id(self):
+        if hasattr(self, '_key') and getattr(self, '_key') is not None:
+            return self.__collection__ + '/' + getattr(self, '_key')
+
+        return None
+
 
 class Relation(Collection):
 
     _safe_list = [
-        '__collection__', '_safe_list', '_collections_from', '_collections_to',
+        '__collection__', '_safe_list', '_id', '_collections_from', '_collections_to',
         '_object_from', '_object_to'
     ]
 
@@ -157,9 +167,8 @@ class Relation(Collection):
         if '_key' in in_dict and not hasattr(new_obj, '_key'):
             setattr(new_obj, '_key', in_dict['_key'])
 
-        # new_obj = Collection._load(in_dict)
-
-        # new_obj.__class__ = cls
+        if '_id' in in_dict:
+            new_obj.__collection__ = in_dict['_id'].split('/')[0]
 
         if '_from' in in_dict:
             setattr(new_obj, '_from', in_dict['_from'])

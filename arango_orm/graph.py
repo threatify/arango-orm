@@ -84,7 +84,7 @@ class Graph(object):
         assert direction in ('any', 'inbound', 'outbound')
 
         graph = self._db.graph(self.__graph__)
-        doc_id = doc_obj.__collection__ + '/' + doc_obj._key
+        doc_id = doc_obj._id
         results = graph.traverse(
             start_vertex=doc_id,
             direction=direction,
@@ -115,7 +115,7 @@ class Graph(object):
 
         # Create objects from vertices dicts
         documents = {doc_id: doc_obj}
-        doc_obj._relations = {}
+        relations_added = {}
 
         for v_dict in results['vertices']:
             # Get ORM class for the collection
@@ -125,15 +125,55 @@ class Graph(object):
             documents[v_dict['_id']] = obj
 
         for p_dict in results['paths']:
-            for e_dict in p_dict['edges']:
-                col_name = e_dict['_id'].split('/')[0]
-                if col_name not in doc_obj._relations:
-                    doc_obj._relations[col_name] = []
 
-                RelationClass = self.edges[col_name].__class__
-                rel = RelationClass._load(e_dict)
-                rel._object_from = documents[rel._from]
-                rel._object_to = documents[rel._to]
-                doc_obj._relations[col_name].append(rel)
+            # Process each path as a unit
+            # First edge's _from always points to our parent document
+            print('------------')
+            parent_id = doc_obj._id
+
+            # TODO: Fix the example given below, we might not need _object_from and _object_to within
+            # relations, instead we might just need link_object or link_object should point to the
+            # other side of the link
+
+            # In [8]: bruce._relations['specializes_in'][0]._object_to._relations['teaches'][0]._object_to.name
+            # Out[8]: 'Introduction to Programming'
+            # In [9]: bruce._relations['specializes_in'][0]._object_to._relations['teaches'][0]._object_from.name
+            # Out[9]: 'Barry Allen'
+
+            for e_dict in p_dict['edges']:
+
+                print('->')
+                col_name = e_dict['_id'].split('/')[0]
+
+                if e_dict['_id'] in relations_added:
+                    rel = relations_added[e_dict['_id']]
+
+                else:
+                    RelationClass = self.edges[col_name].__class__
+                    rel = RelationClass._load(e_dict)
+                    rel._object_from = documents[rel._from]
+                    rel._object_to = documents[rel._to]
+
+                parent_object = None
+                print(parent_id)
+                print(rel)
+                if rel._from == parent_id:
+                    parent_object = documents[rel._from]
+                    parent_id = rel._to
+                elif rel._to == parent_id:
+                    parent_object = documents[rel._to]
+                    parent_id = rel._from
+
+                assert parent_object is not None
+
+                if not hasattr(parent_object, '_relations'):
+                    setattr(parent_object, '_relations', {})
+
+                if col_name not in parent_object._relations:
+                    parent_object._relations[col_name] = []
+
+                if rel._id not in relations_added:
+                    parent_object._relations[col_name].append(rel)
+                    relations_added[rel._id] = rel
 
         return results['paths'], documents, doc_obj._relations

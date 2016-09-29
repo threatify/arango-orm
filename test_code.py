@@ -16,7 +16,7 @@ bruce = db.query(Teacher).by_key("T001")
 traversal_results = db.graph('university_graph').traverse(start_vertex='teachers/T001', direction='any',
                                        vertex_uniqueness='path', min_depth=1, max_depth=1)
 
-uni_graph.expand(bruce)
+uni_graph.expand(bruce, depth=2)
 
 
 ###############################3
