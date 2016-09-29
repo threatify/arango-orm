@@ -159,9 +159,11 @@ class Graph(object):
                 print(rel)
                 if rel._from == parent_id:
                     parent_object = documents[rel._from]
+                    rel._next = rel._object_to
                     parent_id = rel._to
                 elif rel._to == parent_id:
                     parent_object = documents[rel._to]
+                    rel._next = rel._object_from
                     parent_id = rel._from
 
                 assert parent_object is not None

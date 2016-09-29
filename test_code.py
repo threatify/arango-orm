@@ -18,7 +18,11 @@ traversal_results = db.graph('university_graph').traverse(start_vertex='teachers
 
 uni_graph.expand(bruce, depth=2)
 
+bruce._relations['specializes_in'][0]._object_to._relations['teaches'][0]._object_from.name
+bruce._relations['specializes_in'][0]._next._relations['teaches'][0]._next.name
 
+            
+            
 ###############################3
 from datetime import date
 from arango import ArangoClient
