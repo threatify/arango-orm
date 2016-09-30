@@ -94,41 +94,22 @@ class Graph(object):
             min_depth=1, max_depth=depth
         )
 
-        # {'edges': [
-        #     {'_from': 'teachers/T001',
-        #     '_id': 'teaches/3358463',
-        #     '_key': '3358463',
-        #     '_rev': '3358463',
-        #     '_to': 'subjects/CSOOP02'}
-        #     ],
-        #   'vertices': [
-        #     {'_id': 'teachers/T001',
-        #     '_key': 'T001',
-        #     '_rev': '3358372',
-        #     'name': 'Bruce Wayne'},
-        #    {'_id': 'subjects/CSOOP02',
-        #     '_key': 'CSOOP02',
-        #     '_rev': '3358389',
-        #     'credit_hours': 3,
-        #     'has_labs': True,
-        #     'name': 'Object Oriented Programming'}
-        #    ]
-        # }
-
         # Create objects from vertices dicts
         documents = {doc_id: doc_obj}
         relations_added = {}
 
-        for v_dict in results['vertices']:
-            # Get ORM class for the collection
-            col_name = v_dict['_id'].split('/')[0]
-            CollectionClass = self.vertices[col_name]
-            obj = CollectionClass._load(v_dict)
-            documents[v_dict['_id']] = obj
-
         for p_dict in results['paths']:
 
-            # code below should be in a separate method/function???
+            for v_dict in p_dict['vertices']:
+
+                if v_dict['_id'] in documents:
+                    continue
+
+                # Get ORM class for the collection
+                col_name = v_dict['_id'].split('/')[0]
+                CollectionClass = self.vertices[col_name]
+                obj = CollectionClass._load(v_dict)
+                documents[v_dict['_id']] = obj
 
             # Process each path as a unit
             # First edge's _from always points to our parent document
