@@ -132,15 +132,14 @@ class Graph(object):
 
             # Process each path as a unit
             # First edge's _from always points to our parent document
-            print('------------')
             parent_id = doc_obj._id
 
-            # if len(p_dict['edges']) > 2 and p_dict['edges'][0]['_id'].startswith('resides_in'):
-            #     pdb.set_trace()
+            if 3 == len(p_dict['edges']) and p_dict['edges'][0]['_id'] == 'resides_in/3806819' \
+               and p_dict['edges'][1]['_id'] == 'resides_in/3806829':
+                pdb.set_trace()
 
             for e_dict in p_dict['edges']:
 
-                print('->')
                 col_name = e_dict['_id'].split('/')[0]
 
                 if e_dict['_id'] in relations_added:
@@ -152,6 +151,34 @@ class Graph(object):
                     rel._object_from = documents[rel._from]
                     rel._object_to = documents[rel._to]
 
+                # TODO: Fix the next issue
+                # The Problem: when there are two paths between two objects, the path traversed last
+                # gets used for next which sometimes doesn't make sense.
+                # For example consider this scenario
+                #
+                # Path 1: bruce -> resides_in -> Gotham <- resides_in <- John Wayne
+                # in this case:
+                # bruce._relations['resides_in'][0]._next._relations['resides_in'][0]._next.name
+                # Gets us John Wayne
+                #
+                # Path 2: bruce -> teaches -> oop <- studies <- John Wayne -> resides in -> Gotham
+                # In this case for:
+                # bruce._relations['resides_in'][0]._next._relations['resides_in'][0]._next
+                # We get Gotham Area object which has no name attribute.
+                # This is in-correct and occurs because we're reusing the relationship
+                # "John Wayne resides in Gotham", but since this time the parent object is John Wayne
+                # Because we're coming from the other side, Gotham is set as the _next object, overwriting
+                # The previous _next object Which was John Wayne
+                #
+                # Possible Solution:
+                # When we fetch a relationship object from existing store, we need to check if it's _next
+                # does not match our current parent_object. If it does, we should create a new
+                # relationship object. We should also store the relationships with their parent object
+                # IDs into the relations_added dict so we can fetch the correct one accordingly
+                # In which case the code below would only need to be executed when adding a new
+                # relation object and can be skipped when fetching existing relationship because
+                # we'll be fetching according to the relationship and parent_object
+                
                 parent_object = None
                 if rel._from == parent_id:
                     parent_object = documents[rel._from]
@@ -177,5 +204,4 @@ class Graph(object):
                 if rel._id not in relations_added:
                     relations_added[rel._id] = rel
 
-
-        return results['paths'], doc_obj._relations
+        return True

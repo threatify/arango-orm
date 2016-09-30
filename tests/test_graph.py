@@ -19,7 +19,7 @@ class TestGraph(TestBase):
     @classmethod
     def setUpClass(cls):
         db = cls._get_db_obj()
-        cls._graph = UniversityGraph()
+        cls._graph = UniversityGraph(connection=db)
         db.create_graph(cls._graph)
 
     @classmethod
@@ -108,3 +108,58 @@ class TestGraph(TestBase):
         db.add(self._graph.relation(lilly_parker, Relation("resides_in"), metropolis))
         db.add(self._graph.relation(cassandra_nix, Relation("resides_in"), star_city))
         db.add(self._graph.relation(peter_parker, Relation("resides_in"), metropolis))
+
+    def test_04_node_expansion_depth_1(self):
+
+        db = self._get_db_obj()
+        bruce = db.query(Teacher).by_key("T001")
+
+        self._graph.expand(bruce, depth=1)
+
+        assert hasattr(bruce, '_relations')
+        self.assert_all_in(['resides_in', 'specializes_in', 'teaches'], bruce._relations)
+        assert 1 == len(bruce._relations['resides_in'])
+        assert 1 == len(bruce._relations['teaches'])
+        assert 3 == len(bruce._relations['specializes_in'])
+
+        # Test for relation's _object_from, _object_to and _next attributes
+        assert hasattr(bruce._relations['resides_in'][0], '_object_from')
+        assert hasattr(bruce._relations['resides_in'][0], '_object_to')
+        assert hasattr(bruce._relations['resides_in'][0], '_next')
+        assert bruce._relations['resides_in'][0]._object_from is bruce
+        assert 'Gotham' == bruce._relations['resides_in'][0]._object_to._key
+        assert 'Gotham' == bruce._relations['resides_in'][0]._next._key
+        assert not hasattr(bruce._relations['resides_in'][0]._next, '_relations')
+
+    def test_05_node_expansion_depth_2(self):
+
+        db = self._get_db_obj()
+        bruce = db.query(Teacher).by_key("T001")
+
+        self._graph.expand(bruce, depth=2)
+
+        assert hasattr(bruce, '_relations')
+        self.assert_all_in(['resides_in', 'specializes_in', 'teaches'], bruce._relations)
+
+        assert hasattr(bruce._relations['resides_in'][0]._next, '_relations')
+        assert 'resides_in' in bruce._relations['resides_in'][0]._next._relations
+        assert 'John Wayne' == bruce._relations['resides_in'][0]._next._relations['resides_in'][0]._next.name
+        assert not hasattr(bruce._relations['resides_in'][0]._next._relations['resides_in'][0]._next,
+                           '_relations')
+
+    def test_06_node_expansion_depth_3(self):
+
+        db = self._get_db_obj()
+        bruce = db.query(Teacher).by_key("T001")
+
+        self._graph.expand(bruce, depth=3)
+
+        assert hasattr(bruce, '_relations')
+        self.assert_all_in(['resides_in', 'specializes_in', 'teaches'], bruce._relations)
+
+        assert hasattr(bruce._relations['resides_in'][0]._next, '_relations')
+        assert 'resides_in' in bruce._relations['resides_in'][0]._next._relations
+        assert 'John Wayne' == bruce._relations['resides_in'][0]._next._relations['resides_in'][0]._next.name
+        assert bruce._relations['teaches'][0]._next._relations['studies'][0]._next._relations['resides_in']._next.name in ['Gotham',]
+        assert hasattr(bruce._relations['resides_in'][0]._next._relations['resides_in'][0]._next,
+                       '_relations')
