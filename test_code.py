@@ -76,3 +76,4 @@ new_person = Person._load(pd)
 new_col = Collection('new_collection')
 db.create_collection(new_col)
 db.drop_collection(new_col)
+

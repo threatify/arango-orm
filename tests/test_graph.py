@@ -160,6 +160,6 @@ class TestGraph(TestBase):
         assert hasattr(bruce._relations['resides_in'][0]._next, '_relations')
         assert 'resides_in' in bruce._relations['resides_in'][0]._next._relations
         assert 'John Wayne' == bruce._relations['resides_in'][0]._next._relations['resides_in'][0]._next.name
-        assert bruce._relations['teaches'][0]._next._relations['studies'][0]._next._relations['resides_in']._next.name in ['Gotham',]
+        assert bruce._relations['teaches'][0]._next._relations['studies'][0]._next._relations['resides_in'][0]._next._key in ['Gotham', 'Metropolis', 'StarCity']
         assert hasattr(bruce._relations['resides_in'][0]._next._relations['resides_in'][0]._next,
                        '_relations')

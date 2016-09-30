@@ -1,6 +1,6 @@
 from inspect import isclass
 from .collections import Relation
-import pdb
+# import pdb
 
 
 class GraphConnection(object):
@@ -134,16 +134,13 @@ class Graph(object):
             # First edge's _from always points to our parent document
             parent_id = doc_obj._id
 
-            if 3 == len(p_dict['edges']) and p_dict['edges'][0]['_id'] == 'resides_in/3806819' \
-               and p_dict['edges'][1]['_id'] == 'resides_in/3806829':
-                pdb.set_trace()
-
             for e_dict in p_dict['edges']:
 
                 col_name = e_dict['_id'].split('/')[0]
+                rel_identifier = parent_id + '->' + e_dict['_id']
 
-                if e_dict['_id'] in relations_added:
-                    rel = relations_added[e_dict['_id']]
+                if rel_identifier in relations_added:
+                    rel = relations_added[rel_identifier]
 
                 else:
                     RelationClass = self.edges[col_name].__class__
@@ -151,57 +148,34 @@ class Graph(object):
                     rel._object_from = documents[rel._from]
                     rel._object_to = documents[rel._to]
 
-                # TODO: Fix the next issue
-                # The Problem: when there are two paths between two objects, the path traversed last
-                # gets used for next which sometimes doesn't make sense.
-                # For example consider this scenario
-                #
-                # Path 1: bruce -> resides_in -> Gotham <- resides_in <- John Wayne
-                # in this case:
-                # bruce._relations['resides_in'][0]._next._relations['resides_in'][0]._next.name
-                # Gets us John Wayne
-                #
-                # Path 2: bruce -> teaches -> oop <- studies <- John Wayne -> resides in -> Gotham
-                # In this case for:
-                # bruce._relations['resides_in'][0]._next._relations['resides_in'][0]._next
-                # We get Gotham Area object which has no name attribute.
-                # This is in-correct and occurs because we're reusing the relationship
-                # "John Wayne resides in Gotham", but since this time the parent object is John Wayne
-                # Because we're coming from the other side, Gotham is set as the _next object, overwriting
-                # The previous _next object Which was John Wayne
-                #
-                # Possible Solution:
-                # When we fetch a relationship object from existing store, we need to check if it's _next
-                # does not match our current parent_object. If it does, we should create a new
-                # relationship object. We should also store the relationships with their parent object
-                # IDs into the relations_added dict so we can fetch the correct one accordingly
-                # In which case the code below would only need to be executed when adding a new
-                # relation object and can be skipped when fetching existing relationship because
-                # we'll be fetching according to the relationship and parent_object
-                
-                parent_object = None
+                    parent_object = None
+                    if rel._from == parent_id:
+                        parent_object = documents[rel._from]
+                        rel._next = rel._object_to
+
+                    elif rel._to == parent_id:
+                        parent_object = documents[rel._to]
+                        rel._next = rel._object_from
+
+                    assert parent_object is not None
+
+                    if not hasattr(parent_object, '_relations'):
+                        setattr(parent_object, '_relations', {})
+
+                    if col_name not in parent_object._relations:
+                        parent_object._relations[col_name] = []
+
+                    if rel not in parent_object._relations[col_name]:
+                        parent_object._relations[col_name].append(rel)
+
+                    if rel._id not in relations_added:
+                        relations_added[rel_identifier] = rel
+
+                # Set parent ID
                 if rel._from == parent_id:
-                    parent_object = documents[rel._from]
-                    rel._next = rel._object_to
                     parent_id = rel._to
 
                 elif rel._to == parent_id:
-                    parent_object = documents[rel._to]
-                    rel._next = rel._object_from
                     parent_id = rel._from
-
-                assert parent_object is not None
-
-                if not hasattr(parent_object, '_relations'):
-                    setattr(parent_object, '_relations', {})
-
-                if col_name not in parent_object._relations:
-                    parent_object._relations[col_name] = []
-
-                if rel not in parent_object._relations[col_name]:
-                    parent_object._relations[col_name].append(rel)
-
-                if rel._id not in relations_added:
-                    relations_added[rel._id] = rel
 
         return True
