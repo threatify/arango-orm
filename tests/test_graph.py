@@ -25,7 +25,7 @@ class TestGraph(TestBase):
     @classmethod
     def tearDownClass(cls):
         db = cls._get_db_obj()
-        #db.drop_graph(cls._graph)
+        db.drop_graph(cls._graph)
 
     def test_01_graph_and_collections_exist(self):
 
@@ -163,3 +163,54 @@ class TestGraph(TestBase):
         assert bruce._relations['teaches'][0]._next._relations['studies'][0]._next._relations['resides_in'][0]._next._key in ['Gotham', 'Metropolis', 'StarCity']
         assert hasattr(bruce._relations['resides_in'][0]._next._relations['resides_in'][0]._next,
                        '_relations')
+
+    def test_07_inbound_connections_traversal(self):
+
+        db = self._get_db_obj()
+        gotham = db.query(Area).by_key("Gotham")
+
+        self._graph.expand(gotham, depth=1, direction='inbound')
+
+        assert 1 == len(gotham._relations.keys())
+        assert 'resides_in' in gotham._relations
+        assert 2 == len(gotham._relations['resides_in'])
+
+    def test_08_aql_based_traversal(self):
+
+        obj = self._graph.aql("FOR v, e, p IN 1..2 INBOUND 'areas/Gotham' GRAPH 'university_graph' RETURN p")
+        assert isinstance(obj, Area)
+        assert 'Gotham' == obj._key
+        self.assert_all_in(
+            ['Bruce Wayne', 'John Wayne'],
+            [r._next.name for r in obj._relations['resides_in']]
+        )
+
+    def test_09_aql_based_traversal_with_filter_depth_1(self):
+
+        query = ("FOR v, e, p IN 1..1 ANY 'teachers/T001' GRAPH 'university_graph' "
+                 "FILTER LIKE(p.edges[0]._id, 'resides_in%') RETURN p")
+
+        obj = self._graph.aql(query)
+        assert isinstance(obj, Teacher)
+        assert 'Bruce Wayne' == obj.name
+        assert 1 == len(obj._relations.keys())
+        assert 'resides_in' in obj._relations
+        assert 'Gotham' == obj._relations['resides_in'][0]._next._key
+        assert not hasattr(obj._relations['resides_in'][0]._next, '_relations')
+
+    def test_10_aql_based_traversal_with_filter_depth_2(self):
+
+        query = ("FOR v, e, p IN 2..2 ANY 'teachers/T001' GRAPH 'university_graph' "
+                 "FILTER LIKE(p.edges[0]._id, 'resides_in%') RETURN p")
+
+        obj = self._graph.aql(query)
+        assert isinstance(obj, Teacher)
+        assert 'Bruce Wayne' == obj.name
+        assert 1 == len(obj._relations.keys())
+        assert 'resides_in' in obj._relations
+        assert 'Gotham' == obj._relations['resides_in'][0]._next._key
+        assert hasattr(obj._relations['resides_in'][0]._next, '_relations')
+        assert 'John Wayne' == \
+                    obj._relations['resides_in'][0]._next._relations['resides_in'][0]._next.name
+        assert not hasattr(obj._relations['resides_in'][0]._next._relations['resides_in'][0]._next,
+                           '_relations')

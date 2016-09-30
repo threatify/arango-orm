@@ -11,6 +11,8 @@ db = Database(test_db)
 
 uni_graph = UniversityGraph(connection=db)
 
+obj = uni_graph.aql("FOR v, e, p IN 1..2 INBOUND 'areas/Gotham' GRAPH 'university_graph'  RETURN p")
+
 bruce = db.query(Teacher).by_key("T001")
 amanda = db.query(Teacher).by_key("T003")
 
@@ -77,3 +79,5 @@ new_col = Collection('new_collection')
 db.create_collection(new_col)
 db.drop_collection(new_col)
 
+# db._query(` FOR v, e, p IN 1..1 ANY 'teachers/T001' GRAPH 'university_graph' FILTER LIKE(p.edges[0]._id, 'resides_in%')  RETURN p`);
+# db._query(` FOR v, e, p IN 2..2 ANY 'teachers/T001' GRAPH 'university_graph' FILTER LIKE(p.edges[0]._id, 'resides_in%')  RETURN p`);

@@ -76,40 +76,39 @@ class Graph(object):
 
         return relation
 
-    def expand(self, doc_obj, direction='any', depth=1):
-        """
-        Expand all links of given direction (outbound, inbound, any) upto given length for
-        the given document object and update the object with the found relations
-        """
+    def _doc_from_dict(self, doc_dict):
+        "Given a result dictionary, creates and returns a document object"
 
-        assert direction in ('any', 'inbound', 'outbound')
+        col_name = doc_dict['_id'].split('/')[0]
+        CollectionClass = self.vertices[col_name]
+        return CollectionClass._load(doc_dict)
 
-        graph = self._db.graph(self.__graph__)
-        doc_id = doc_obj._id
-        doc_obj._relations = {}  # clear any previous relations
-        results = graph.traverse(
-            start_vertex=doc_id,
-            direction=direction,
-            vertex_uniqueness='path',
-            min_depth=1, max_depth=depth
-        )
+    def _objectify_results(self, results, doc_obj=None):
+        """
+        Make traversal results object oriented by adding all links to the first object's _relations
+        attribute. If doc_obj is not provided, the first vertex of the first path is used.
+        """
 
         # Create objects from vertices dicts
-        documents = {doc_id: doc_obj}
+        documents = {}
+        if doc_obj:
+            documents[doc_obj._id] = doc_obj
+
         relations_added = {}
 
-        for p_dict in results['paths']:
+        for p_dict in results:
 
             for v_dict in p_dict['vertices']:
+                if doc_obj is None:
+                    # Get the first vertex of the first result, it's the parent object
+                    doc_obj = self._doc_from_dict(v_dict)
+                    documents[doc_obj._id] = doc_obj
 
                 if v_dict['_id'] in documents:
                     continue
 
                 # Get ORM class for the collection
-                col_name = v_dict['_id'].split('/')[0]
-                CollectionClass = self.vertices[col_name]
-                obj = CollectionClass._load(v_dict)
-                documents[v_dict['_id']] = obj
+                documents[v_dict['_id']] = self._doc_from_dict(v_dict)
 
             # Process each path as a unit
             # First edge's _from always points to our parent document
@@ -159,4 +158,36 @@ class Graph(object):
                 elif rel._to == parent_id:
                     parent_id = rel._from
 
-        return True
+        return doc_obj
+
+    def expand(self, doc_obj, direction='any', depth=1):
+        """
+        Expand all links of given direction (outbound, inbound, any) upto given length for
+        the given document object and update the object with the found relations
+        """
+
+        assert direction in ('any', 'inbound', 'outbound')
+
+        graph = self._db.graph(self.__graph__)
+        doc_id = doc_obj._id
+        doc_obj._relations = {}  # clear any previous relations
+        results = graph.traverse(
+            start_vertex=doc_id,
+            direction=direction,
+            vertex_uniqueness='path',
+            min_depth=1, max_depth=depth
+        )
+
+        self._objectify_results(results['paths'], doc_obj)
+
+    def aql(self, query, **kwargs):
+        """
+        Return results based on given AQL query. bind_vars already contains @@collection param.
+        Query should always refer to the current collection using @collection
+        """
+
+        results = self._db.aql.execute(query, **kwargs)
+
+        doc_obj = self._objectify_results(results)
+
+        return doc_obj
