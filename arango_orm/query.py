@@ -37,7 +37,7 @@ class Query(object):
         log.warning(doc_dict)
         return self._CollectionClass._load(doc_dict)
 
-    def filter(self, condition, _or=False, **kwargs):
+    def filter(self, condition, _or=False, prepend_rec_name=True, **kwargs):
         """
         Filter the results based on given condition. By default filter conditions are joined
         by AND operator if this method is called multiple times. If you want to use the OR operator
@@ -48,7 +48,8 @@ class Query(object):
         if len(self._filter_conditions) > 0:
             joiner = 'OR' if _or else 'AND'
 
-        self._filter_conditions.append(dict(condition=condition, joiner=joiner))
+        self._filter_conditions.append(dict(condition=condition, joiner=joiner,
+                                            prepend_rec_name=prepend_rec_name))
         self._bind_vars.update(kwargs)
 
         return self
@@ -85,7 +86,11 @@ class Query(object):
             else:
                 line = fc['joiner'] + ' '
 
-            line += 'rec.' + fc['condition']
+            if fc['prepend_rec_name']:
+                line += 'rec.'
+
+            line += fc['condition']
+
             aql += line + ' '
 
         # Process Sort
