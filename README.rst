@@ -134,6 +134,30 @@ ______________________
                 "LIKE(rec.name, 'A%')", prepend_rec_name=False).sort("name DESC").limit(5).all()
 
 
+Update Multiple Records
+_______________________
+
+::
+
+    db.query(Student).filter("name==@name", name='Anonymous').update(name='Mr. Anonymous')
+
+
+Delete Multiple Records
+_______________________
+
+::
+
+    db.query(Student).filter("LIKE(rec.name, 'test%')", prepend_rec_name=False).delete()
+
+
+Delete All Records
+___________________
+
+::
+
+    db.query(Student).delete()
+
+
 Query Using AQL
 ________________
 
