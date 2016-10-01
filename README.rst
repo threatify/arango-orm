@@ -7,6 +7,8 @@ Python ORM Layer For ArangoDB
 Connecting to a Database
 -------------------------
 
+::
+
     from arango import ArangoClient
     from arango_orm import Database
     
