@@ -1,7 +1,6 @@
 from marshmallow import Schema
 from marshmallow.fields import String, Date, Integer, Boolean
-from arango_orm.collections import Collection, Relation
-from arango_orm.graph import Graph, GraphConnection
+from arango_orm import Collection, Relation, Graph, GraphConnection
 
 
 class Person(Collection):
@@ -113,7 +112,6 @@ class UniversityGraph(Graph):
         # Using specific classes for vertex and edges
         GraphConnection(Teacher, SpecializesIn, Subject),
         GraphConnection([Teacher, Student], Relation("resides_in"), Area)
-
     ]
 
 
