@@ -369,3 +369,72 @@ Or we can use the graph object's relation method to generate a relation document
     db.add(uni_graph.relation(cassandra_nix, Relation("resides_in"), star_city))
     db.add(uni_graph.relation(peter_parker, Relation("resides_in"), metropolis))
 
+With our graph populated with some sample data, let's explore the ways we can work with the graph.
+
+
+Expanding Documents
+___________________
+
+We can expand any Collection (not Relation) object to access the data that is linked to it. We can sepcify which links ('inbound', 'outbound', 'any') to expand and the depth to which those should be expanded to. Let's see all immediate connections that Bruce Wayne has in our graph::
+
+    bruce = db.query(Teacher).by_key("T001")
+    uni_graph.expand(bruce, depth=1, direction='any')
+
+Graph expansion on an object adds a **_relations** dictionary that contains all the relations for the object according to the expansion criteria::
+
+    bruce._relations
+
+Returns::
+
+    {
+    'resides_in': [<Relation(_key=4205290, _from=teachers/T001, _to=areas/Gotham)>],
+    'specializes_in': [<SpecializesIn(_key=4205114, expertise_level=medium, _from=teachers/T001, _to=subjects/ITP101)>,
+     <SpecializesIn(_key=4205271, expertise_level=expert, _from=teachers/T001, _to=subjects/CS102)>,
+     <SpecializesIn(_key=4205268, expertise_level=medium, _from=teachers/T001, _to=subjects/CSOOP02)>],
+    'teaches': [<Relation(_key=4205280, _from=teachers/T001, _to=subjects/CSOOP02)>]
+    }
+
+We can use _from and _to of a relation object to access the id's for both sides of the link. We also have _object_from and _object_to to access the objects on both sides, for example::
+
+    bruce._relations['resides_in'][0]._object_from.name
+    # 'Bruce Wayne'
+    
+    bruce._relations['resides_in'][0]._object_to._key
+    # 'Gotham'
+
+There is also a special attribute called **_next** that allows accessing the other side of the relationship irrespective of the relationship direction. For example, for outbound relationships the _object_from contains the source object while for inbound_relationships _object_to contains the source object. But if we're only interested in traversal of the graph then it's more useful at times to access the other side of the relationship w.r.t the current object irrespective of it's direction::
+
+    bruce._relations['resides_in'][0]._next._key
+
+Let's expand the bruce object to 2 levels and see **_next** in more action::
+
+    uni_graph.expand(bruce, depth=2)
+    
+    # All relations of the area where bruce resides in
+    bruce._relations['resides_in'][0]._object_to._relations
+    # -> {'resides_in': [<Relation(_key=4205300, _from=students/S1001, _to=areas/Gotham)>]}
+    
+    # Name of the student that resides in the same area as bruce
+    bruce._relations['resides_in'][0]._object_to._relations['resides_in'][0]._object_from.name
+    
+    # The same action using _next without worrying about direction
+    bruce._relations['resides_in'][0]._next._relations['resides_in'][0]._next.name
+    
+    # Get names of all people that reside in the same area and Bruce Wayne
+    [p._next.name for p in bruce._relations['resides_in'][0]._next._relations['resides_in']]
+    # ['John Wayne']
+
+
+Graph Traversal Using AQL
+__________________________
+
+The graph module also supports traversals using AQL, the results are converted to objects and have the
+same structure as graph.expand method::
+
+    obj = uni_graph.aql("FOR v, e, p IN 1..2 INBOUND 'areas/Gotham' GRAPH 'university_graph' RETURN p")
+    print(obj._key)
+    # Gotham
+    
+    gotham_residents = [rel._next.name for rel in obj._relations['resides_in']]
+    print(gotham_residents)
+    # ['Bruce Wayne', 'John Wayne']
