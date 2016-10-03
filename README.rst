@@ -3,6 +3,13 @@ Python ORM Layer For ArangoDB
 
 **arango_orm** is a python ORM layer inspired by SQLAlchemy but aimed to work with the multi-model database ArangoDB. It supports accessing both collections and graphs using the ORM. The actual communication with the database is done using **python-arango** (the database driver for accessing arangodb from python) and object serialization and deserialization is handled using **marshmallow**
 
+Installation:
+-------------
+
+::
+
+    pip install arango-orm
+
 
 Connecting to a Database
 -------------------------
@@ -405,6 +412,7 @@ We can use _from and _to of a relation object to access the id's for both sides 
 There is also a special attribute called **_next** that allows accessing the other side of the relationship irrespective of the relationship direction. For example, for outbound relationships the _object_from contains the source object while for inbound_relationships _object_to contains the source object. But if we're only interested in traversal of the graph then it's more useful at times to access the other side of the relationship w.r.t the current object irrespective of it's direction::
 
     bruce._relations['resides_in'][0]._next._key
+    # 'Gotham'
 
 Let's expand the bruce object to 2 levels and see **_next** in more action::
 
@@ -416,9 +424,11 @@ Let's expand the bruce object to 2 levels and see **_next** in more action::
     
     # Name of the student that resides in the same area as bruce
     bruce._relations['resides_in'][0]._object_to._relations['resides_in'][0]._object_from.name
+    # 'John Wayne'
     
     # The same action using _next without worrying about direction
     bruce._relations['resides_in'][0]._next._relations['resides_in'][0]._next.name
+    # 'John Wayne'
     
     # Get names of all people that reside in the same area and Bruce Wayne
     [p._next.name for p in bruce._relations['resides_in'][0]._next._relations['resides_in']]

@@ -15,6 +15,8 @@ setup(
     ],
     author='Kashif Iftikhar',
     author_email='kashif@compulife.com.pk',
+    url="https://github.com/threatify/arango-orm",
+    license="GNU General Public License v3 (GPLv3)",
     keywords='arangodb orm python',
     packages=find_packages(),
     include_package_data=True,
