@@ -44,6 +44,11 @@ class Database(ArangoDatabase):
 
         super().delete_collection(name=collection.__collection__)
 
+    def has(self, collection, key):
+        "Check if the document with given key exists in the given collection"
+
+        return self._db.collection(collection.__collection__).has(key)
+
     def add(self, entity):
         "Add a record to a collection"
 

@@ -34,7 +34,9 @@ class Query(object):
         "Return a single document using it's key"
 
         doc_dict = self._db.collection(self._CollectionClass.__collection__).get(key, **kwargs)
-        log.warning(doc_dict)
+        if doc_dict is None:
+            return None
+
         return self._CollectionClass._load(doc_dict)
 
     def filter(self, condition, _or=False, prepend_rec_name=True, **kwargs):
