@@ -210,8 +210,8 @@ delete_database - delete test database
 
     if len(sys.argv) > 1:
         if 'test_data_create' == sys.argv[1]:
-            data_create()
             db.create_graph(uni_graph)
+            data_create()
         elif 'drop_graph' == sys.argv[1]:
             db.drop_graph(uni_graph)
         elif 'delete_database' == sys.argv[1]:
