@@ -49,6 +49,11 @@ class Database(ArangoDatabase):
 
         return self._db.collection(collection.__collection__).has(key)
 
+    def exists(self, document):
+        "Similar to has but takes in a document object and searches using it's _key"
+
+        return self._db.collection(document.__collection__).has(document._key)
+
     def add(self, entity):
         "Add a record to a collection"
 
