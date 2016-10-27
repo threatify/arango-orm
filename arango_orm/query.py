@@ -28,7 +28,15 @@ class Query(object):
     def count(self):
         "Return collection count"
 
-        return self._db.collection(self._CollectionClass.__collection__).count()
+        # return self._db.collection(self._CollectionClass.__collection__).count()
+        aql = self._make_aql()
+
+        aql += '\n COLLECT WITH COUNT INTO rec_count RETURN rec_count'
+        print(aql)
+
+        results = self._db.aql.execute(aql, bind_vars=self._bind_vars)
+
+        return next(results)
 
     def by_key(self, key, **kwargs):
         "Return a single document using it's key"
