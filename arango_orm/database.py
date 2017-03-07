@@ -1,6 +1,7 @@
 """
 A wrapper around python-arango's database class adding some SQLAlchemy like ORM methods to it.
 """
+from copy import deepcopy
 from inspect import isclass
 
 from arango.database import Database as ArangoDatabase
@@ -35,8 +36,18 @@ class Database(ArangoDatabase):
 
         self._verify_collection(collection)
 
-        super().create_collection(name=collection.__collection__,
-                                  **collection._collection_config)
+        col = super().create_collection(name=collection.__collection__,
+                                        **collection._collection_config)
+
+        if hasattr(collection, '_index'):
+            for index in collection._index:
+                index_create_method_name = 'add_{}_index'.format(index['type'])
+
+                d = deepcopy(index)
+                del d['type']
+
+                # create the index
+                getattr(col, index_create_method_name)(**d)
 
     def drop_collection(self, collection):
         "Drop a collection"

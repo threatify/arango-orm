@@ -116,6 +116,8 @@ class Query(object):
         if self._limit:
             aql += "\n LIMIT {}, {} ".format(self._limit_start_record, self._limit)
 
+        log.debug(aql)
+
         return aql
 
     def update(self, wait_for_sync=True, ignore_errors=False, **kwargs):

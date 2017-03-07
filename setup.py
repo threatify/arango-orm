@@ -7,7 +7,7 @@ requires = [
 
 setup(
     name='arango-orm',
-    version='0.1',
+    version='0.2',
     description='A SQLAlchemy like ORM implementation for arangodb',
     long_description="A SQLAlchemy like ORM implementation using python-arango as the backend library",
     classifiers=[
