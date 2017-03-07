@@ -6,6 +6,7 @@ from arango_orm import Collection, Relation, Graph, GraphConnection
 class Person(Collection):
 
     __collection__ = 'persons'
+    _index = [{'type': 'hash', 'unique': False, 'fields': ['name']}]
 
     class _Schema(Schema):
         _key = String(required=True)

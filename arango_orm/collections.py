@@ -31,7 +31,9 @@ class Collection(CollectionBase):
 
     __collection__ = None
 
-    _safe_list = ['__collection__', '_safe_list', '_relations', '_id']
+    _safe_list = [
+        '__collection__', '_safe_list', '_relations', '_id', '_index', '_collection_config'
+    ]
 
     def __init__(self, collection_name=None, **kwargs):
         if collection_name is not None:
@@ -104,7 +106,7 @@ class Relation(Collection):
 
     _safe_list = [
         '__collection__', '_safe_list', '_id', '_collections_from', '_collections_to',
-        '_object_from', '_object_to'
+        '_object_from', '_object_to', '_index', '_collection_config'
     ]
 
     def __init__(self, collection_name=None, **kwargs):
@@ -123,12 +125,6 @@ class Relation(Collection):
         self._to = None
         self._object_from = None
         self._object_to = None
-
-        # if '_from' in kwargs:
-        #     self._from = kwargs['_from']
-        # 
-        # if '_to' in kwargs:
-        #     self._to = kwargs['_to']
 
         super().__init__(collection_name=collection_name, **kwargs)
 

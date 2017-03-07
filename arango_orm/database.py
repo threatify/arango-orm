@@ -31,13 +31,15 @@ class Database(ArangoDatabase):
 
         assert col.__collection__ is not None
 
-    def create_collection(self, collection):
+    def create_collection(self, collection, **col_args):
         "Create a collection"
 
         self._verify_collection(collection)
 
-        col = super().create_collection(name=collection.__collection__,
-                                        **collection._collection_config)
+        if hasattr(collection, '_collection_config'):
+            col_args.update(collection._collection_config)
+
+        col = super().create_collection(name=collection.__collection__, **col_args)
 
         if hasattr(collection, '_index'):
             for index in collection._index:
@@ -96,6 +98,15 @@ class Database(ArangoDatabase):
         "Create a named graph from given graph object"
 
         graph_edge_definitions = []
+
+        # Create collections manually here so we also create indices
+        # defined within the collection class. If we let the create_graph
+        # call create the collections, it won't create the indices
+        for _, col_obj in graph_object.vertices.items():
+            self.create_collection(col_obj)
+
+        for _, rel_obj in graph_object.edges.items():
+            self.create_collection(rel_obj, edge=True)
 
         for _, relation_obj in graph_object.edges.items():
 
