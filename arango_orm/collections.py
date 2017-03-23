@@ -58,6 +58,7 @@ class Collection(CollectionBase):
     @classmethod
     def _load(cls, in_dict):
         "Create object from given dict"
+
         data, errors = cls._Schema().load(in_dict)
         if errors:
             raise RuntimeError("Error loading object of collection {} - {}".format(

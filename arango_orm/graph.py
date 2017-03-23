@@ -81,6 +81,17 @@ class Graph(object):
 
         col_name = doc_dict['_id'].split('/')[0]
         CollectionClass = self.vertices[col_name]
+
+        # remove empty values
+        keys_to_del = []
+        for k, v in doc_dict.items():
+            if doc_dict[k] is None:
+                keys_to_del.append(k)
+
+        if keys_to_del:
+            for k in keys_to_del:
+                del doc_dict[k]
+
         return CollectionClass._load(doc_dict)
 
     def _objectify_results(self, results, doc_obj=None):

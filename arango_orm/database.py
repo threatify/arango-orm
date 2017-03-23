@@ -94,8 +94,12 @@ class Database(ArangoDatabase):
 
         return Query(CollectionClass, self)
 
-    def create_graph(self, graph_object):
-        "Create a named graph from given graph object"
+    def create_graph(self, graph_object, **kwargs):
+        """
+        Create a named graph from given graph object
+        Optionally can provide a list of collection names as ignore_collections
+        so those collections are not created
+        """
 
         graph_edge_definitions = []
 
@@ -103,9 +107,18 @@ class Database(ArangoDatabase):
         # defined within the collection class. If we let the create_graph
         # call create the collections, it won't create the indices
         for _, col_obj in graph_object.vertices.items():
+
+            if 'ignore_collections' in kwargs and \
+                    col_obj.__collection__ in kwargs['ignore_collections']:
+                continue
+
             self.create_collection(col_obj)
 
         for _, rel_obj in graph_object.edges.items():
+
+            if 'ignore_collections' in kwargs and col_obj in kwargs['ignore_collections']:
+                continue
+            
             self.create_collection(rel_obj, edge=True)
 
         for _, relation_obj in graph_object.edges.items():
@@ -134,18 +147,28 @@ class Database(ArangoDatabase):
 
         self._db.create_graph(graph_object.__graph__, graph_edge_definitions)
 
-    def drop_graph(self, graph_object, drop_collections=True):
+    def drop_graph(self, graph_object, drop_collections=True, **kwargs):
         """
         Drop a graph, if drop_collections is True, drop all vertices and edges too
+        Optionally can provide a list of collection names as ignore_collections
+        so those collections are not dropped
         """
 
         graph = self._db.graph(graph_object.__graph__)
 
         if drop_collections:
             for col in graph_object.edges:
+
+                if 'ignore_collections' in kwargs and col in kwargs['ignore_collections']:
+                    continue
+
                 graph.delete_edge_definition(col, purge=True)
 
             for col in graph_object.vertices:
+
+                if 'ignore_collections' in kwargs and col in kwargs['ignore_collections']:
+                    continue
+
                 graph.delete_vertex_collection(col, purge=True)
 
         self._db.delete_graph(graph_object.__graph__)
