@@ -32,7 +32,7 @@ class Query(object):
         aql = self._make_aql()
 
         aql += '\n COLLECT WITH COUNT INTO rec_count RETURN rec_count'
-        print(aql)
+        # print(aql)
 
         results = self._db.aql.execute(aql, bind_vars=self._bind_vars)
 
@@ -167,7 +167,7 @@ class Query(object):
         aql = self._make_aql()
 
         aql += '\n RETURN rec'
-        print(aql)
+        # print(aql)
 
         results = self._db.aql.execute(aql, bind_vars=self._bind_vars)
         ret = []

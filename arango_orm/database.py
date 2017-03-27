@@ -1,12 +1,15 @@
 """
 A wrapper around python-arango's database class adding some SQLAlchemy like ORM methods to it.
 """
+import logging
 from copy import deepcopy
 from inspect import isclass
 
 from arango.database import Database as ArangoDatabase
 from .collections import CollectionBase
 from .query import Query
+
+log = logging.getLogger(__name__)
 
 
 class Database(ArangoDatabase):
@@ -112,14 +115,22 @@ class Database(ArangoDatabase):
                     col_obj.__collection__ in kwargs['ignore_collections']:
                 continue
 
-            self.create_collection(col_obj)
+            try:
+                self.create_collection(col_obj)
+            except Exception as exp:
+                log.warning("Error creating collection %s, it probably already exists",
+                            col_obj.__collection__)
 
         for _, rel_obj in graph_object.edges.items():
 
             if 'ignore_collections' in kwargs and col_obj in kwargs['ignore_collections']:
                 continue
-            
-            self.create_collection(rel_obj, edge=True)
+
+            try:
+                self.create_collection(rel_obj, edge=True)
+            except Exception as exp:
+                log.warning("Error creating edge collection %s, it probably already exists",
+                            rel_obj.__collection__)
 
         for _, relation_obj in graph_object.edges.items():
 
