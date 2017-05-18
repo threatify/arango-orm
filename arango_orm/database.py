@@ -42,7 +42,7 @@ class Database(ArangoDatabase):
         if hasattr(collection, '_collection_config'):
             col_args.update(collection._collection_config)
 
-        col = super().create_collection(name=collection.__collection__, **col_args)
+        col = super(Database, self).create_collection(name=collection.__collection__, **col_args)
 
         if hasattr(collection, '_index'):
             for index in collection._index:
@@ -58,7 +58,7 @@ class Database(ArangoDatabase):
         "Drop a collection"
         self._verify_collection(collection)
 
-        super().delete_collection(name=collection.__collection__)
+        super(Database, self).delete_collection(name=collection.__collection__)
 
     def has(self, collection, key):
         "Check if the document with given key exists in the given collection"
