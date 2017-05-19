@@ -1,3 +1,4 @@
+from six import with_metaclass
 from abc import ABCMeta, abstractmethod
 from marshmallow.fields import List, String, UUID, Integer, Boolean, DateTime
 from marshmallow.validate import ContainsOnly, NoneOf, OneOf
@@ -12,7 +13,7 @@ class MemberExistsException(Exception):
     pass
 
 
-class CollectionBase(metaclass=ABCMeta):
+class CollectionBase(with_metaclass(ABCMeta)):
     "Base class for Collections, Nodes and Links"
 
     class _Schema(Schema):
@@ -127,7 +128,7 @@ class Relation(Collection):
         self._object_from = None
         self._object_to = None
 
-        super().__init__(collection_name=collection_name, **kwargs)
+        super(Relation, self).__init__(collection_name=collection_name, **kwargs)
 
     def __str__(self):
         ret = "<" + self.__class__.__name__ + '('
@@ -178,7 +179,7 @@ class Relation(Collection):
     def _dump(self, **kwargs):
         "Dump all object attributes into a dict"
 
-        data = super()._dump(**kwargs)
+        data = super(Relation, self)._dump(**kwargs)
 
         if '_from' not in data and hasattr(self, '_from'):
             data['_from'] = getattr(self, '_from')
