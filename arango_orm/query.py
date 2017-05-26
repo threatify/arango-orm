@@ -47,7 +47,7 @@ class Query(object):
 
         return self._CollectionClass._load(doc_dict)
 
-    def filter(self, condition, _or=False, prepend_rec_name=True, **kwargs):
+    def filter(self, condition, _or=False, prepend_rec_name=True, rec_name_placeholder=None, **kwargs):
         """
         Filter the results based on given condition. By default filter conditions are joined
         by AND operator if this method is called multiple times. If you want to use the OR operator
@@ -59,10 +59,21 @@ class Query(object):
             joiner = 'OR' if _or else 'AND'
 
         self._filter_conditions.append(dict(condition=condition, joiner=joiner,
-                                            prepend_rec_name=prepend_rec_name))
+                                            prepend_rec_name=prepend_rec_name,
+                                            rec_name_placeholder=rec_name_placeholder))
         self._bind_vars.update(kwargs)
 
         return self
+
+    def filter_by(self, _or=False, prepend_rec_name=True, **kwargs):
+        """Filter the results by keywords"""
+        if not kwargs:
+            return self
+
+        condition = ' AND '.join(['$REC.{0}==@{0}'.format(k) for k in kwargs])
+
+        return self.filter(condition, _or=_or, prepend_rec_name=False,
+                           rec_name_placeholder='$REC', **kwargs)
 
     def sort(self, col_name):
         "Add a sort condition, sorting order of ASC or DESC can be provided after col_name and a space"
@@ -100,6 +111,10 @@ class Query(object):
                 line += 'rec.'
 
             line += fc['condition']
+
+            rec_ph = fc.get('rec_name_placeholder')
+            if rec_ph:
+                line = line.replace(rec_ph, 'rec')
 
             aql += line + ' '
 
