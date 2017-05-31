@@ -57,8 +57,11 @@ class Collection(CollectionBase):
         return self.__str__()
 
     @classmethod
-    def _load(cls, in_dict):
+    def _load(cls, in_dict, instance=None):
         "Create object from given dict"
+
+        if instance:
+            in_dict = dict(instance._dump(), **in_dict)
 
         data, errors = cls._Schema().load(in_dict)
         if errors:
