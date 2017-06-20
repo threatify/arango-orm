@@ -57,7 +57,7 @@ class Collection(CollectionBase):
         return self.__str__()
 
     @classmethod
-    def _load(cls, in_dict, instance=None):
+    def _load(cls, in_dict, instance=None, db=None):
         "Create object from given dict"
 
         if instance:
@@ -69,6 +69,11 @@ class Collection(CollectionBase):
                 cls.__name__, errors))
 
         new_obj = cls()
+
+        if db:
+            new_obj._db = db
+        else:
+            new_obj._db = getattr(instance, '_db', None)
 
         for k, v in data.items():
             if k in cls._safe_list or (k in dir(cls) and callable(getattr(cls, k))):

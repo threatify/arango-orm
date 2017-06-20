@@ -45,7 +45,7 @@ class Query(object):
         if doc_dict is None:
             return None
 
-        return self._CollectionClass._load(doc_dict)
+        return self._CollectionClass._load(doc_dict, db=self._db)
 
     def filter(self, condition, _or=False, prepend_rec_name=True, rec_name_placeholder=None, **kwargs):
         """
@@ -188,7 +188,7 @@ class Query(object):
         ret = []
 
         for rec in results:
-            ret.append(self._CollectionClass._load(rec))
+            ret.append(self._CollectionClass._load(rec, db=self._db))
 
         return ret
 
@@ -203,4 +203,4 @@ class Query(object):
         else:
             kwargs['bind_vars'] = {'@collection': self._bind_vars['@collection']}
 
-        return [self._CollectionClass._load(rec) for rec in self._db.aql.execute(query, **kwargs)]
+        return [self._CollectionClass._load(rec, db=self._db) for rec in self._db.aql.execute(query, **kwargs)]
