@@ -68,6 +68,11 @@ class Collection(CollectionBase):
             raise RuntimeError("Error loading object of collection {} - {}".format(
                 cls.__name__, errors))
 
+        # add any extra fields present in in_dict into data
+        for k, v in in_dict.items():
+            if k not in data and not k.startswith('_'):
+                data[k] = v
+
         new_obj = cls()
 
         for k, v in data.items():
@@ -96,6 +101,13 @@ class Collection(CollectionBase):
 
         if '_key' not in data and hasattr(self, '_key'):
             data['_key'] = getattr(self, '_key')
+
+        # Also dump extra fields as is without any validation or conversion
+        for prop in dir(self):
+            if prop in data or callable(getattr(self, prop)) or prop.startswith('_'):
+                continue
+
+            data[prop] = getattr(self, prop)
 
         return data
 
