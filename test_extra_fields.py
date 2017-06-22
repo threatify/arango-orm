@@ -29,3 +29,9 @@ s1.value
 s1._dump()
 
 db.add(s1)
+
+db.add(Setting(_key='boolean', value=True))
+db.add(Setting(_key='integer', value=100))
+db.add(Setting(_key='float', value=12.22))
+db.add(Setting(_key='list', value=[1,2,3]))
+db.add(Setting(_key='dict', value={'a': 1, 'b': 2}))

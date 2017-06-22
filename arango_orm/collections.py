@@ -69,9 +69,10 @@ class Collection(CollectionBase):
                 cls.__name__, errors))
 
         # add any extra fields present in in_dict into data
-        for k, v in in_dict.items():
-            if k not in data and not k.startswith('_'):
-                data[k] = v
+        if cls._allow_extra_fields:
+            for k, v in in_dict.items():
+                if k not in data and not k.startswith('_'):
+                    data[k] = v
 
         new_obj = cls()
 
@@ -103,11 +104,12 @@ class Collection(CollectionBase):
             data['_key'] = getattr(self, '_key')
 
         # Also dump extra fields as is without any validation or conversion
-        for prop in dir(self):
-            if prop in data or callable(getattr(self, prop)) or prop.startswith('_'):
-                continue
+        if self._allow_extra_fields:
+            for prop in dir(self):
+                if prop in data or callable(getattr(self, prop)) or prop.startswith('_'):
+                    continue
 
-            data[prop] = getattr(self, prop)
+                data[prop] = getattr(self, prop)
 
         return data
 
