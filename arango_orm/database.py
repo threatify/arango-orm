@@ -74,6 +74,7 @@ class Database(ArangoDatabase):
         "Add a record to a collection"
 
         collection = self._db.collection(entity.__collection__)
+        setattr(entity, '_db', self)
         res = collection.insert(entity._dump())
         if not hasattr(entity, '_key') and '_key' in res:
             setattr(entity, '_key', res['_key'])
@@ -90,6 +91,7 @@ class Database(ArangoDatabase):
         "Update given document"
 
         collection = self._db.collection(entity.__collection__)
+        setattr(entity, '_db', self)
         return collection.update(entity._dump(), **kwargs)
 
     def query(self, CollectionClass):
@@ -183,3 +185,4 @@ class Database(ArangoDatabase):
                 graph.delete_vertex_collection(col, purge=True)
 
         self._db.delete_graph(graph_object.__graph__)
+
