@@ -33,7 +33,7 @@ class Collection(CollectionBase):
     __collection__ = None
 
     _safe_list = [
-        '__collection__', '_safe_list', '_relations', '_id', '_index', '_collection_config'
+        '__collection__', '_safe_list', '_relations', '_id', '_index', '_collection_config', '_post_process', '_pre_process'
     ]
 
     def __init__(self, collection_name=None, **kwargs):
