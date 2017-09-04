@@ -1,5 +1,5 @@
 import sys
-from marshmallow.fields import List, String, UUID, Integer, Boolean, DateTime
+from arango_orm.fields import List, String, UUID, Integer, Boolean, DateTime
 from marshmallow.validate import ContainsOnly, NoneOf, OneOf
 from marshmallow import (
     Schema, pre_load, pre_dump, post_load, validates_schema,

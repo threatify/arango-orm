@@ -1,26 +1,23 @@
 from arango import ArangoClient
 from arango_orm import Database, Collection, Relation, Graph, GraphConnection
-from marshmallow.fields import List, String, UUID, Integer, Boolean, DateTime
-from marshmallow import Schema
+from arango_orm.fields import List, String, UUID, Integer, Boolean, DateTime
 
 
 class Teacher(Collection):
 
     __collection__ = 'teachers'
 
-    class _Schema(Schema):
-        _key = String(required=True)  # employee id
-        name = String(required=True)
+    _key = String(required=True)  # employee id
+    name = String(required=True)
 
 
 class Student(Collection):
 
     __collection__ = 'students'
 
-    class _Schema(Schema):
-        _key = String(required=True)  # registration number
-        name = String(required=True, allow_none=False)
-        age = Integer()
+    _key = String(required=True)  # registration number
+    name = String(required=True, allow_none=False)
+    age = Integer()
 
 
 class UniversityGraph(Graph):
@@ -57,5 +54,3 @@ students_of_bruce = [r._next for r in bruce._relations['teaches']]
 
 for s in students_of_bruce:
     print(s.name)
-
-

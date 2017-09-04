@@ -31,18 +31,16 @@ First we need to define data models (similar to SQLAlchemy's models) to specify 
 
 
     from arango_orm import Collection
-    from marshmallow import Schema
-    from marshmallow.fields import String, Date
+    from arango_orm.fields import String, Date
     
     class Student(Collection):
     
         __collection__ = 'students'
         _index = [{'type': 'hash', fields: ['name'], unique=False}]
-    
-        class _Schema(Schema):
-            _key = String(required=True)  # registration number
-            name = String(required=True, allow_none=False)
-            dob = Date()
+
+        _key = String(required=True)  # registration number
+        name = String(required=True, allow_none=False)
+        dob = Date()
 
 
 Create Collection in the Database
@@ -188,19 +186,17 @@ Working with graphs involves creating collection classes and optionally Edge/Rel
 
 First we create some collections and relationships::
 
-    from marshmallow import Schema
-    from marshmallow.fields import String, Date, Integer, Boolean
+    from arango_orm.fields import String, Date, Integer, Boolean
     from arango_orm import Collection, Relation, Graph, GraphConnection
 
 
     class Student(Collection):
 
         __collection__ = 'students'
-    
-        class _Schema(Schema):
-            _key = String(required=True)  # registration number
-            name = String(required=True, allow_none=False)
-            age = Integer()
+
+        _key = String(required=True)  # registration number
+        name = String(required=True, allow_none=False)
+        age = Integer()
     
         def __str__(self):
             return "<Student({})>".format(self.name)
@@ -209,10 +205,9 @@ First we create some collections and relationships::
     class Teacher(Collection):
     
         __collection__ = 'teachers'
-    
-        class _Schema(Schema):
-            _key = String(required=True)  # employee id
-            name = String(required=True)
+
+        _key = String(required=True)  # employee id
+        name = String(required=True)
     
         def __str__(self):
             return "<Teacher({})>".format(self.name)
@@ -221,12 +216,11 @@ First we create some collections and relationships::
     class Subject(Collection):
     
         __collection__ = 'subjects'
-    
-        class _Schema(Schema):
-            _key = String(required=True)  # subject code
-            name = String(required=True)
-            credit_hours = Integer()
-            has_labs = Boolean(missing=True)
+
+        _key = String(required=True)  # subject code
+        name = String(required=True)
+        credit_hours = Integer()
+        has_labs = Boolean(missing=True)
     
         def __str__(self):
             return "<Subject({})>".format(self.name)
@@ -235,17 +229,16 @@ First we create some collections and relationships::
     class Area(Collection):
     
         __collection__ = 'areas'
-    
-        class _Schema(Schema):
-            _key = String(required=True)  # area name
+
+        _key = String(required=True)  # area name
 
     
     class SpecializesIn(Relation):
     
         __collection__ = 'specializes_in'
     
-        class _Schema(Schema):
-            expertise_level = String(required=True, options=["expert", "medium", "basic"])
+        _key = String(required=True)
+        expertise_level = String(required=True, options=["expert", "medium", "basic"])
     
         def __str__(self):
             return "<SpecializesIn(_key={}, expertise_level={}, _from={}, _to={})>".format(

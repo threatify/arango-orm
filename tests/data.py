@@ -1,5 +1,4 @@
-from marshmallow import Schema
-from marshmallow.fields import String, Date, Integer, Boolean
+from arango_orm.fields import String, Date, Integer, Boolean
 from arango_orm import Collection, Relation, Graph, GraphConnection
 
 
