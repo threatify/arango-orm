@@ -3,14 +3,9 @@
 from datetime import date
 from . import TestBase
 from .data import Person
-from arango import ArangoClient
-from arango.collections.base import CollectionStatisticsError
-from arango_orm.database import Database
-from arango_orm.collections import Collection
 
 
 class TestCollection(TestBase):
-
 
     def test_01_object_from_dict(self):
 
@@ -34,6 +29,7 @@ class TestCollection(TestBase):
         p = Person(name='test', _key='12312', dob=date(year=2016, month=9, day=12))
         d = p._dump()
 
+        print(d)
         assert 'test' == d['name']
         assert '12312' == d['_key']
         assert '12312' == d['_key']
@@ -44,5 +40,6 @@ class TestCollection(TestBase):
         p = Person(name='test', _key='12312')
         d = p._dump()
 
-        self.assert_all_in(['name', '_key', '_key'], d)
-        assert 'dob' not in d
+        print(d)
+        self.assert_all_in(['name', '_key'], d)
+        assert d['dob'] is None
