@@ -14,7 +14,7 @@ Installation:
 Connecting to a Database
 -------------------------
 
-::
+.. code-block:: python
 
     from arango import ArangoClient
     from arango_orm import Database
@@ -27,8 +27,9 @@ Connecting to a Database
 Working With Collections
 -------------------------
 
-First we need to define data models (similar to SQLAlchemy's models) to specify what data our collection(s) will contain and how to marshall it::
+First we need to define data models (similar to SQLAlchemy's models) to specify what data our collection(s) will contain and how to marshall it
 
+.. code-block:: python
 
     from arango_orm import Collection
     from arango_orm.fields import String, Date
@@ -46,7 +47,7 @@ First we need to define data models (similar to SQLAlchemy's models) to specify 
 Create Collection in the Database
 _________________________________
 
-::
+.. code-block:: python
 
     db.create_collection(Student)
 
@@ -54,7 +55,7 @@ _________________________________
 Drop a Collection
 __________________
 
-::
+.. code-block:: python
 
     db.drop_collection(Student)
 
@@ -62,7 +63,7 @@ __________________
 Add Records
 ___________
 
-::
+.. code-block:: python
 
     from datetime import date
     s = Student(name='test', _key='12312', dob=date(year=2016, month=9, day=12))
@@ -73,7 +74,7 @@ ___________
 Get Total Records in the Collection
 ___________________________________
 
-::
+.. code-block:: python
 
     db.query(Student).count()
 
@@ -81,7 +82,7 @@ ___________________________________
 Get Record By Key
 _________________
 
-::
+.. code-block:: python
 
     s = db.query(Student).by_key('12312')
 
@@ -89,7 +90,7 @@ _________________
 Update a Record
 ________________
 
-::
+.. code-block:: python
 
     s = db.query(Student).by_key('12312')
     s.name = 'Anonymous'
@@ -98,7 +99,7 @@ ________________
 Delete a Record
 ________________
 
-::
+.. code-block:: python
 
     s = db.query(Student).by_key('12312')
     db.delete(s)
@@ -106,7 +107,7 @@ ________________
 Get All Records in a Collection
 ________________________________
 
-::
+.. code-block:: python
 
     students = db.query(Student).all()
 
@@ -114,11 +115,15 @@ ________________________________
 Filter Records
 ______________
 
-Using bind parameters (recommended)::
+Using bind parameters (recommended)
+
+.. code-block:: python
 
     records = db.query(Student).filter("name==@name", name='Anonymous').all()
 
-Using plain condition strings (not safe in case of unsanitized user supplied input)::
+Using plain condition strings (not safe in case of unsanitized user supplied input)
+
+.. code-block:: python
 
     records = db.query(Student).filter("name=='Anonymous'").all()
 
@@ -126,7 +131,7 @@ Using plain condition strings (not safe in case of unsanitized user supplied inp
 Filter Using OR
 _______________
 
-::
+.. code-block:: python
 
     # Get all documents where student name starts with A or B
     records = db.query(Student).filter(
@@ -137,7 +142,7 @@ _______________
 Filter, Sort and Limit
 ______________________
 
-::
+.. code-block:: python
 
     # Last 5 students with names starting with A
     records = db.query(Student).filter(
@@ -147,7 +152,7 @@ ______________________
 Update Multiple Records
 _______________________
 
-::
+.. code-block:: python
 
     db.query(Student).filter("name==@name", name='Anonymous').update(name='Mr. Anonymous')
 
@@ -155,7 +160,7 @@ _______________________
 Delete Multiple Records
 _______________________
 
-::
+.. code-block:: python
 
     db.query(Student).filter("LIKE(rec.name, 'test%')", prepend_rec_name=False).delete()
 
@@ -163,7 +168,7 @@ _______________________
 Delete All Records
 ___________________
 
-::
+.. code-block:: python
 
     db.query(Student).delete()
 
@@ -171,7 +176,7 @@ ___________________
 Query Using AQL
 ________________
 
-::
+.. code-block:: python
 
     db.add(Student(name='test1', _key='12345', dob=date(year=2016, month=9, day=12)))
     db.add(Student(name='test2', _key='22346', dob=date(year=2015, month=9, day=12)))
@@ -184,7 +189,9 @@ Working With Graphs
 
 Working with graphs involves creating collection classes and optionally Edge/Relation classes. Users can use the built-in Relation class for specifying relations but if relations need to contain extra attributes then it's required to create a sub-class of Relation class. Graph functionality is explain below with the help of a university graph example containing students, teachers, subjects and the areas where students and teachers reside in.
 
-First we create some collections and relationships::
+First we create some collections and relationships
+
+.. code-block:: python
 
     from arango_orm.fields import String, Date, Integer, Boolean
     from arango_orm import Collection, Relation, Graph, GraphConnection
@@ -245,7 +252,9 @@ First we create some collections and relationships::
                 self._key, self.expertise_level, self._from, self._to)
 
 
-Next we sub-class the Graph class to specify the relationships between the various collections::
+Next we sub-class the Graph class to specify the relationships between the various collections
+
+.. code-block:: python
 
     class UniversityGraph(Graph):
 
@@ -261,7 +270,9 @@ Next we sub-class the Graph class to specify the relationships between the vario
             GraphConnection([Teacher, Student], Relation("resides_in"), Area)
         ]
 
-Now it's time to create the graph. Note that we don't need to create the collections individually, creating the graph will create all collections that it contains::
+Now it's time to create the graph. Note that we don't need to create the collections individually, creating the graph will create all collections that it contains
+
+.. code-block:: python
 
     from arango import ArangoClient
     from arango_orm.database import Database
@@ -275,12 +286,16 @@ Now it's time to create the graph. Note that we don't need to create the collect
     db.create_graph(uni_graph)
 
 
-Now the graph and all it's collections have been created, we can verify their existence::
+Now the graph and all it's collections have been created, we can verify their existence:
+
+.. code-block:: python
 
     [c['name'] for c in db.collections()]
     db.graphs()
 
-Now let's insert some data into our graph::
+Now let's insert some data into our graph:
+
+.. code-block:: python
 
     students_data = [
         Student(_key='S1001', name='John Wayne', age=30),
@@ -319,11 +334,15 @@ Now let's insert some data into our graph::
     for a in areas_data:
         db.add(a)
 
-Next let's add some relations, we can add relations by manually adding the relation/edge record into the edge collection, like::
+Next let's add some relations, we can add relations by manually adding the relation/edge record into the edge collection, like:
+
+.. code-block:: python
 
     db.add(SpecializesIn(_from="teachers/T001", _to="subjects/ITP101", expertise_level="medium"))
 
-Or we can use the graph object's relation method to generate a relation document from given objects::
+Or we can use the graph object's relation method to generate a relation document from given objects:
+
+.. code-block:: python
 
     gotham = db.query(Area).by_key("Gotham")
     metropolis = db.query(Area).by_key("Metropolis")
@@ -376,12 +395,16 @@ With our graph populated with some sample data, let's explore the ways we can wo
 Expanding Documents
 ___________________
 
-We can expand any Collection (not Relation) object to access the data that is linked to it. We can sepcify which links ('inbound', 'outbound', 'any') to expand and the depth to which those should be expanded to. Let's see all immediate connections that Bruce Wayne has in our graph::
+We can expand any Collection (not Relation) object to access the data that is linked to it. We can sepcify which links ('inbound', 'outbound', 'any') to expand and the depth to which those should be expanded to. Let's see all immediate connections that Bruce Wayne has in our graph:
+
+.. code-block:: python
 
     bruce = db.query(Teacher).by_key("T001")
     uni_graph.expand(bruce, depth=1, direction='any')
 
-Graph expansion on an object adds a **_relations** dictionary that contains all the relations for the object according to the expansion criteria::
+Graph expansion on an object adds a **_relations** dictionary that contains all the relations for the object according to the expansion criteria:
+
+.. code-block:: python
 
     bruce._relations
 
@@ -395,7 +418,9 @@ Returns::
     'teaches': [<Relation(_key=4205280, _from=teachers/T001, _to=subjects/CSOOP02)>]
     }
 
-We can use _from and _to of a relation object to access the id's for both sides of the link. We also have _object_from and _object_to to access the objects on both sides, for example::
+We can use _from and _to of a relation object to access the id's for both sides of the link. We also have _object_from and _object_to to access the objects on both sides, for example:
+
+.. code-block:: python
 
     bruce._relations['resides_in'][0]._object_from.name
     # 'Bruce Wayne'
@@ -403,12 +428,16 @@ We can use _from and _to of a relation object to access the id's for both sides 
     bruce._relations['resides_in'][0]._object_to._key
     # 'Gotham'
 
-There is also a special attribute called **_next** that allows accessing the other side of the relationship irrespective of the relationship direction. For example, for outbound relationships the _object_from contains the source object while for inbound_relationships _object_to contains the source object. But if we're only interested in traversal of the graph then it's more useful at times to access the other side of the relationship w.r.t the current object irrespective of it's direction::
+There is also a special attribute called **_next** that allows accessing the other side of the relationship irrespective of the relationship direction. For example, for outbound relationships the _object_from contains the source object while for inbound_relationships _object_to contains the source object. But if we're only interested in traversal of the graph then it's more useful at times to access the other side of the relationship w.r.t the current object irrespective of it's direction:
+
+.. code-block:: python
 
     bruce._relations['resides_in'][0]._next._key
     # 'Gotham'
 
-Let's expand the bruce object to 2 levels and see **_next** in more action::
+Let's expand the bruce object to 2 levels and see **_next** in more action:
+
+.. code-block:: python
 
     uni_graph.expand(bruce, depth=2)
     
@@ -433,7 +462,9 @@ Graph Traversal Using AQL
 __________________________
 
 The graph module also supports traversals using AQL, the results are converted to objects and have the
-same structure as graph.expand method::
+same structure as graph.expand method:
+
+.. code-block:: python
 
     obj = uni_graph.aql("FOR v, e, p IN 1..2 INBOUND 'areas/Gotham' GRAPH 'university_graph' RETURN p")
     print(obj._key)
