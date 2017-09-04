@@ -1,10 +1,8 @@
-from six import with_metaclass
 from abc import ABCMeta, abstractmethod
-from marshmallow.fields import List, String, UUID, Integer, Boolean, DateTime
-from marshmallow.validate import ContainsOnly, NoneOf, OneOf
+
+from six import with_metaclass
 from marshmallow import (
-    Schema, pre_load, pre_dump, post_load, validates_schema,
-    validates, fields, ValidationError
+    Schema, fields, ValidationError
 )
 
 
@@ -16,9 +14,6 @@ class MemberExistsException(Exception):
 class CollectionBase(with_metaclass(ABCMeta)):
     "Base class for Collections, Nodes and Links"
 
-    class _Schema(Schema):
-        pass
-
     _key_field = None
     _allow_extra_fields = True
     _collection_config = {}
@@ -27,18 +22,48 @@ class CollectionBase(with_metaclass(ABCMeta)):
     def __init__(self, collection_name):
         pass
 
+    @classmethod
+    def schema(cls):
+
+        fields_dict = {}
+
+        for attr_name in dir(cls):
+            attr_obj = getattr(cls, attr_name)
+            if not callable(attr_obj) and isinstance(attr_obj, fields.Field):
+                # add to schema fields
+                fields_dict[attr_name] = attr_obj
+
+        SchemaClass = type(
+            cls.__name__ + 'Schema',
+            (Schema, ),
+            fields_dict
+        )
+
+        return SchemaClass()
+
+    def remove_schema_fields(self):
+        for attr_name in dir(self):
+            attr_obj = getattr(self, attr_name)
+            if not callable(attr_obj) and isinstance(attr_obj, fields.Field):
+                setattr(self, attr_name, None)
+
 
 class Collection(CollectionBase):
 
     __collection__ = None
 
     _safe_list = [
-        '__collection__', '_safe_list', '_relations', '_id', '_index', '_collection_config', '_post_process', '_pre_process'
+        '__collection__', '_safe_list', '_relations', '_id', '_index',
+        '_collection_config', '_post_process', '_pre_process', '_fields_info'
     ]
 
     def __init__(self, collection_name=None, **kwargs):
         if collection_name is not None:
             self.__collection__ = collection_name
+
+        # cls._Schema().load(in_dict)
+        if '_key' not in kwargs:
+            self._key = None
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -63,7 +88,7 @@ class Collection(CollectionBase):
         if instance:
             in_dict = dict(instance._dump(), **in_dict)
 
-        data, errors = cls._Schema().load(in_dict)
+        data, errors = cls.schema().load(in_dict)
         if errors:
             raise RuntimeError("Error loading object of collection {} - {}".format(
                 cls.__name__, errors))
@@ -100,13 +125,19 @@ class Collection(CollectionBase):
     def _dump(self, **kwargs):
         "Dump all object attributes into a dict"
 
-        data, errors = self._Schema(**kwargs).dump(self)
+        schema = self.schema
+        self.remove_schema_fields()
+        data, errors = schema().dump(self)
+
         if errors:
             raise RuntimeError("Error dumping object of collection {} - {}".format(
                 self.__class__.__name__, errors))
 
         if '_key' not in data and hasattr(self, '_key'):
             data['_key'] = getattr(self, '_key')
+
+        if '_key' in data and data['_key'] is None:
+            del data['_key']
 
         # Also dump extra fields as is without any validation or conversion
         if self._allow_extra_fields:
@@ -169,7 +200,7 @@ class Relation(Collection):
     def _load(cls, in_dict):
         "Create object from given dict"
 
-        data, errors = cls._Schema().load(in_dict)
+        data, errors = cls.schema().load(in_dict)
         if errors:
             raise RuntimeError("Error loading object of relation {} - {}".format(
                 cls.__name__, errors))

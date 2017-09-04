@@ -8,10 +8,9 @@ class Person(Collection):
     __collection__ = 'persons'
     _index = [{'type': 'hash', 'unique': False, 'fields': ['name']}]
 
-    class _Schema(Schema):
-        _key = String(required=True)
-        name = String(required=True, allow_none=False)
-        dob = Date()
+    _key = String(required=True)
+    name = String(required=True, allow_none=False)
+    dob = Date()
 
     def __str__(self):
         return "<Person(" + self.name + ")>"
@@ -21,11 +20,9 @@ class Car(Collection):
 
     __collection__ = 'cars'
 
-    class _Schema(Schema):
-
-        make = String(required=True)
-        model = String(required=True)
-        year = Integer(required=True)
+    make = String(required=True)
+    model = String(required=True)
+    year = Integer(required=True)
 
     def __str__(self):
         return "<Car({} - {} - {})>".format(self.make, self.model, self.year)
@@ -46,10 +43,9 @@ class Student(Collection):
 
     __collection__ = 'students'
 
-    class _Schema(Schema):
-        _key = String(required=True)  # registration number
-        name = String(required=True, allow_none=False)
-        age = Integer()
+    _key = String(required=True)  # registration number
+    name = String(required=True, allow_none=False)
+    age = Integer()
 
     def __str__(self):
         return "<Student({})>".format(self.name)
@@ -59,9 +55,8 @@ class Teacher(Collection):
 
     __collection__ = 'teachers'
 
-    class _Schema(Schema):
-        _key = String(required=True)  # employee id
-        name = String(required=True)
+    _key = String(required=True)  # employee id
+    name = String(required=True)
 
     def __str__(self):
         return "<Teacher({})>".format(self.name)
@@ -71,11 +66,10 @@ class Subject(Collection):
 
     __collection__ = 'subjects'
 
-    class _Schema(Schema):
-        _key = String(required=True)  # subject code
-        name = String(required=True)
-        credit_hours = Integer()
-        has_labs = Boolean(missing=True)
+    _key = String(required=True)  # subject code
+    name = String(required=True)
+    credit_hours = Integer()
+    has_labs = Boolean(missing=True)
 
     def __str__(self):
         return "<Subject({})>".format(self.name)
@@ -85,8 +79,8 @@ class SpecializesIn(Relation):
 
     __collection__ = 'specializes_in'
 
-    class _Schema(Schema):
-        expertise_level = String(required=True, options=["expert", "medium", "basic"])
+    _key = String(required=True)
+    expertise_level = String(required=True, options=["expert", "medium", "basic"])
 
     def __str__(self):
         return "<SpecializesIn(_key={}, expertise_level={}, _from={}, _to={})>".format(
@@ -97,8 +91,7 @@ class Area(Collection):
 
     __collection__ = 'areas'
 
-    class _Schema(Schema):
-        _key = String(required=True)  # area name
+    _key = String(required=True)  # area name
 
 
 class UniversityGraph(Graph):
