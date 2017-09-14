@@ -76,7 +76,7 @@ class Database(ArangoDatabase):
         collection = self._db.collection(entity.__collection__)
         setattr(entity, '_db', self)
         res = collection.insert(entity._dump())
-        if not hasattr(entity, '_key') and '_key' in res:
+        if not getattr(entity, '_key', None) and '_key' in res:
             setattr(entity, '_key', res['_key'])
 
         return res
@@ -185,4 +185,3 @@ class Database(ArangoDatabase):
                 graph.delete_vertex_collection(col, purge=True)
 
         self._db.delete_graph(graph_object.__graph__)
-
