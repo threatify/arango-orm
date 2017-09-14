@@ -191,15 +191,29 @@ class Relation(Collection):
         return ret
 
     @classmethod
-    def _load(cls, in_dict):
+    def _load(cls, in_dict, instance=None, db=None):
         "Create object from given dict"
+
+        if instance:
+            in_dict = dict(instance._dump(), **in_dict)
 
         data, errors = cls.schema().load(in_dict)
         if errors:
             raise RuntimeError("Error loading object of relation {} - {}".format(
                 cls.__name__, errors))
 
+        # add any extra fields present in in_dict into data
+        if cls._allow_extra_fields:
+            for k, v in in_dict.items():
+                if k not in data and not k.startswith('_'):
+                    data[k] = v
+
         new_obj = cls()
+
+        if db:
+            new_obj._db = db
+        else:
+            new_obj._db = getattr(instance, '_db', None)
 
         for k, v in data.items():
             if k in cls._safe_list or (k in dir(cls) and callable(getattr(cls, k))):
