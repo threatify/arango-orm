@@ -245,3 +245,10 @@ class TestDatabase(TestBase):
         db.drop_graph(graph, drop_collections=True)
         db.drop_collection(DummyFromCol1)
         db.drop_collection(DummyToCol1)
+
+    def test_17_default_field_value(self):
+        db = self._get_db_obj()
+
+        p = db.query(Person).by_key("12312")
+
+        assert p.is_staff is False  # not None
