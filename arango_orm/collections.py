@@ -1,3 +1,4 @@
+from six import with_metaclass
 from marshmallow import (
     Schema, fields, ValidationError
 )
