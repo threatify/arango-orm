@@ -26,6 +26,34 @@ class GraphConnection(object):
 
         self.relation = relation_obj
 
+    def to_dict(self):
+        """
+        Convert the GraphConnection relation to dict understandable by the underlying
+        python-arango driver
+        """
+        
+        cols_from = []
+        cols_to = []
+
+        if isinstance(self._collections_from, (list, tuple)):
+            cols_from = self._collections_from
+        else:
+            cols_from = [self._collections_from, ]
+
+        if isinstance(self._collections_to, (list, tuple)):
+            cols_to = self._collections_to
+        else:
+            cols_to = [self._collections_to, ]
+
+        from_col_names = [col.__collection__ for col in cols_from]
+        to_col_names = [col.__collection__ for col in cols_to]
+
+        return {
+            'name': self.relation.__collection__,
+            'from_collections': from_col_names,
+            'to_collections': to_col_names
+        }
+
 
 class Graph(object):
 
@@ -41,6 +69,9 @@ class Graph(object):
 
         if graph_name is not None:
             self.__graph__ = graph_name
+
+        if self._db is not None:
+            self._graph = self._db.graph(self.__graph__)
 
         if graph_connections:
             self.graph_connections = graph_connections

@@ -104,3 +104,10 @@ class TestDatabase(TestBase):
 
         assert len(persons) >= 2
         assert isinstance(persons[0], Person)
+
+    def test_09_add_record_with_auto_key(self):
+
+        db = self._get_db_obj()
+
+        p = Person(name='key less', dob=date(year=2016, month=9, day=12))
+        db.add(p)

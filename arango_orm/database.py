@@ -6,7 +6,7 @@ from copy import deepcopy
 from inspect import isclass
 
 from arango.database import Database as ArangoDatabase
-from .collections import CollectionBase
+from .collections import CollectionBase, Collection, Relation
 from .query import Query
 
 log = logging.getLogger(__name__)
@@ -167,22 +167,191 @@ class Database(ArangoDatabase):
         so those collections are not dropped
         """
 
-        graph = self._db.graph(graph_object.__graph__)
+        # graph = self._db.graph(graph_object.__graph__)
+        # 
+        # if drop_collections:
+        #     for col in graph_object.edges:
+        # 
+        #         if 'ignore_collections' in kwargs and col in kwargs['ignore_collections']:
+        #             continue
+        # 
+        #         log.debug("Dropping edge %s", col)
+        #         print("Dropping edge %s", col)
+        #         graph.delete_edge_definition(col, purge=True)
+        # 
+        #     for col in graph_object.vertices:
+        # 
+        #         if 'ignore_collections' in kwargs and col in kwargs['ignore_collections']:
+        #             continue
+        # 
+        #         log.debug("Dropping collection %s", col)
+        #         graph.delete_vertex_collection(col, purge=True)
 
-        if drop_collections:
-            for col in graph_object.edges:
+        self._db.delete_graph(
+            graph_object.__graph__,
+            ignore_missing=True,
+            drop_collections=drop_collections)
 
-                if 'ignore_collections' in kwargs and col in kwargs['ignore_collections']:
+    def update_graph(self, graph_object, graph_info=None):
+        """
+        Update existing graph object by adding collections and edge collections that are
+        present in graph definition but not present within the graph in the database.
+        
+        Note: We delete edge definitions if they no longer exist in the graph class but we
+        don't drop collections
+        """
+
+        graph_edge_definitions = []
+        if graph_info is None:
+            graph_info = self._get_graph_info(graph_object)
+
+        # Create collections manually here so we also create indices
+        # defined within the collection class. If we let the create_graph
+        # call create the collections, it won't create the indices
+        existing_collection_names = [c['name'] for c in self.collections()]
+        for _, col_obj in graph_object.vertices.items():
+            try:
+                if col_obj.__collection__ in existing_collection_names:
+                    log.debug("Collection %s already exists", col_obj.__collection__)
+                    continue
+        
+                log.info("+ Creating collection %s", col_obj.__collection__)
+                self.create_collection(col_obj)
+
+            except Exception as exp:
+                log.warning("Error creating collection %s, it probably already exists",
+                            col_obj.__collection__)
+
+        for _, rel_obj in graph_object.edges.items():
+            try:
+                if rel_obj.__collection__ in existing_collection_names:
+                    log.debug("Collection %s already exists", rel_obj.__collection__)
                     continue
 
-                graph.delete_edge_definition(col, purge=True)
+                log.info("+ Creating edge collection %s", rel_obj.__collection__)
+                self.create_collection(rel_obj, edge=True)
+            except Exception as exp:
+                log.warning("Error creating edge collection %s, it probably already exists",
+                            rel_obj.__collection__)
 
-            for col in graph_object.vertices:
+        existing_edges = dict([(e['name'],e) for e in graph_object._graph.edge_definitions()])
+        
+        for _, relation_obj in graph_object.edges.items():
+        
+            cols_from = []
+            cols_to = []
+        
+            if isinstance(relation_obj._collections_from, (list, tuple)):
+                cols_from = relation_obj._collections_from
+            else:
+                cols_from = [relation_obj._collections_from, ]
+        
+            if isinstance(relation_obj._collections_to, (list, tuple)):
+                cols_to = relation_obj._collections_to
+            else:
+                cols_to = [relation_obj._collections_to, ]
+        
+            from_col_names = [col.__collection__ for col in cols_from]
+            to_col_names = [col.__collection__ for col in cols_to]
 
-                if 'ignore_collections' in kwargs and col in kwargs['ignore_collections']:
-                    continue
+            edge_definition = {
+                'name': relation_obj.__collection__,
+                'from_collections': from_col_names,
+                'to_collections': to_col_names
+            }
+            
+            # if edge does not already exist, create it
+            if edge_definition['name'] not in existing_edges:
+                log.info("  + creating graph edge definition: %r", edge_definition)
+                graph_object._graph.create_edge_definition(**edge_definition)
+            else:
+                # if edge definition exists, see if it needs updating
+                
 
-                graph.delete_vertex_collection(col, purge=True)
+                # compare edges
+                if not self._is_same_edge(edge_definition, existing_edges[edge_definition['name']]):
+                    # replace_edge_definition
+                    log.info("  graph edge definition modified, updating:\n new: %r\n old: %r",
+                             edge_definition, existing_edges[edge_definition['name']])
+                    graph_object._graph.replace_edge_definition(**edge_definition)
 
-        self._db.delete_graph(graph_object.__graph__)
+        # Remove any edge definitions that are present in DB but not in graph definition
+        graph_connections = dict([(gc.relation.__collection__, gc) \
+            for gc in graph_object.graph_connections])
 
+        for edge_name, ee in existing_edges.items():
+            if edge_name not in graph_connections:
+                log.warning("  - dropping edge no longer present in graph definition. "
+                            "Please drop the edge and vertex collections manually if you no "
+                            "longer need them: \n%s", ee)
+
+                graph_object._graph.delete_edge_definition(edge_name)
+
+    def _is_same_edge(self, e1, e2):
+        """
+        Compare given edge dicts and return True if both dicts have same keys and values else
+        return False
+        """
+        
+        #{'name': 'dns_info', 'to_collections': ['domains'], 'from_collections': ['dns_records']}
+        assert e1['name'] == e2['name']
+
+        if len(e1['to_collections']) != len(e2['to_collections']) or \
+            len(e1['from_collections']) != len(e2['from_collections']):
+
+            return False
+
+        else:
+            # if same length compare values
+            for cname in e1['to_collections']:
+                if cname not in e2['to_collections']:
+                    return False
+
+            for cname in e1['from_collections']:
+                if cname not in e2['from_collections']:
+                    return False
+
+        return True
+
+
+    def _get_graph_info(self, graph_obj):
+
+        graphs_info = self.graphs()
+        for gi in graphs_info:
+            if gi['name'] == graph_obj.__graph__:
+                return gi
+
+        return None
+
+    def create_all(self, db_objects):
+        """
+        Create all objects (collections, relations and graphs) present in the db_objects
+        list.
+        """
+
+        # Collect all graphs
+        graph_objs = [obj for obj in db_objects if hasattr(obj, '__graph__')]
+
+        for graph_obj in graph_objs:
+            graph_info = self._get_graph_info(graph_obj)
+            if not graph_info:
+                # graph does not exist, create it
+                log.info("Creating graph %s", graph_obj.__graph__)
+                self.create_graph(graph_obj)
+            else:
+                # Graph exists, determine changes and update graph accordingly
+                log.debug("Graph %s already exists", graph_obj.__graph__)
+                graph_instance = graph_obj(connection=self)
+                self.update_graph(graph_instance, graph_info)
+
+
+        exclude_collections = [c['name'] for c in self._db.collections()]
+
+        for obj in db_objects:
+            if hasattr(obj, '__bases__') and Collection in obj.__bases__:
+                if obj.__collection__ not in exclude_collections:
+
+                    log.info("Creating collection %s", obj.__collection__)
+                    self.create_collection(obj)
+                else:
+                    log.debug("Collection %s already exists", obj.__collection__)

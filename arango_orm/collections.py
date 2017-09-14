@@ -1,6 +1,3 @@
-from abc import ABCMeta, abstractmethod
-
-from six import with_metaclass
 from marshmallow import (
     Schema, fields, ValidationError
 )
@@ -11,16 +8,12 @@ class MemberExistsException(Exception):
     pass
 
 
-class CollectionBase(with_metaclass(ABCMeta)):
+class CollectionBase(object):
     "Base class for Collections, Nodes and Links"
 
     _key_field = None
     _allow_extra_fields = True
     _collection_config = {}
-
-    @abstractmethod
-    def __init__(self, collection_name):
-        pass
 
     @classmethod
     def schema(cls):
@@ -187,10 +180,11 @@ class Relation(Collection):
         ret = "<" + self.__class__.__name__ + '('
 
         if hasattr(self, '_key'):
-            ret += "_key=" + getattr(self, '_key')
+            ret += "_key=" + str(getattr(self, '_key'))
 
         if hasattr(self, '_from') and hasattr(self, '_to'):
-            ret += ", _from={}, _to={}".format(getattr(self, '_from'), getattr(self, '_to'))
+            ret += ", _from={}, _to={}".format(
+                str(getattr(self, '_from', '')), str(getattr(self, '_to')))
 
         ret += ")>"
 
