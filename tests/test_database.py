@@ -7,7 +7,7 @@ from arango_orm.graph import GraphConnection
 from arango_orm.collections import Collection
 
 from . import TestBase
-from .data import (Person, UniversityGraph,
+from .data import (Person, UniversityGraph, Student, Teacher, Subject, SpecializesIn, Area,
                    DummyFromCol1, DummyFromCol2, DummyRelation, DummyToCol1, DummyToCol2)
 
 
@@ -186,14 +186,14 @@ class TestDatabase(TestBase):
         gi = db.graphs()[0]
         assert DummyRelation.__collection__ not in [e['collection'] for e in gi['edge_definitions']]
 
-    def test_20_drop_graph_without_collections(self):
+    def test_14_drop_graph_without_collections(self):
         db, graph = self._get_graph()
         db.drop_graph(graph, drop_collections=False)
 
         # verify that the collections are not deleted
         assert 'teaches' in [c['name'] for c in db.collections()]
 
-    def test_21_drop_graph_with_collections(self):
+    def test_15_drop_graph_with_collections(self):
         # making sure we remove the dummy collections too
         UniversityGraph.graph_connections[-1] = GraphConnection(
             [DummyFromCol1, DummyFromCol2], DummyRelation, [DummyToCol1, DummyToCol2]
@@ -204,3 +204,36 @@ class TestDatabase(TestBase):
 
         # verify that the collections are not deleted
         assert 'teaches' not in [c['name'] for c in db.collections()]
+
+    def test_16_create_all(self):
+        # Remove the dummy relation connection
+        UniversityGraph.graph_connections.pop()
+
+        db_objects = [UniversityGraph, DummyFromCol1, DummyToCol1]
+        db = self._get_db_obj()
+        db.create_all(db_objects)
+
+        # confirm that graph was created
+        assert len(db.graphs()) > 0
+        assert db.graphs()[0]['name'] == UniversityGraph.__graph__
+
+        col_names = [c['name'] for c in db.collections()]
+        # Confrim dummy from col 1 and to col 2 are created and other dummy collections are not
+        # created by the create_all call
+        assert DummyFromCol1.__collection__ in col_names
+        assert DummyToCol1.__collection__ in col_names
+
+        assert DummyFromCol2.__collection__ not in col_names
+        assert DummyToCol2.__collection__ not in col_names
+        assert DummyRelation.__collection__ not in col_names
+
+        # Confirm all graph collections are craeted
+        assert Student.__collection__ in col_names
+        assert Teacher.__collection__ in col_names
+        assert Subject.__collection__ in col_names
+        assert SpecializesIn.__collection__ in col_names
+        assert Area.__collection__ in col_names
+
+        # Now drop the graph
+        db, graph = self._get_graph()
+        db.drop_graph(graph, drop_collections=True)

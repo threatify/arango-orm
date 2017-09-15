@@ -314,7 +314,8 @@ class Database(ArangoDatabase):
             if not graph_info:
                 # graph does not exist, create it
                 log.info("Creating graph %s", graph_obj.__graph__)
-                self.create_graph(graph_obj)
+                graph_instance = graph_obj(connection=self)
+                self.create_graph(graph_instance)
             else:
                 # Graph exists, determine changes and update graph accordingly
                 log.debug("Graph %s already exists", graph_obj.__graph__)
