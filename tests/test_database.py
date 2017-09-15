@@ -1,13 +1,14 @@
 "Test cases for the :module:`arango_orm.database`"
 
 from datetime import date
-from . import TestBase
-from .data import Person
-from arango import ArangoClient
 from arango.collections.base import CollectionStatisticsError
-
 from arango_orm.database import Database
+from arango_orm.graph import GraphConnection
 from arango_orm.collections import Collection
+
+from . import TestBase
+from .data import (Person, UniversityGraph,
+                   DummyFromCol1, DummyFromCol2, DummyRelation, DummyToCol1, DummyToCol2)
 
 
 class TestDatabase(TestBase):
@@ -111,3 +112,95 @@ class TestDatabase(TestBase):
 
         p = Person(name='key less', dob=date(year=2016, month=9, day=12))
         db.add(p)
+
+    def _get_graph(self):
+        db = self._get_db_obj()
+        return (db, UniversityGraph(connection=db))
+
+    def test_10_create_graph(self):
+        db, graph = self._get_graph()
+        db.create_graph(graph)
+
+        assert graph.__graph__ in [g['name'] for g in db.graphs()]
+
+    def test_11_update_graph_add_connection(self):
+
+        UniversityGraph.graph_connections.append(
+            GraphConnection(DummyFromCol1, DummyRelation, DummyToCol1)
+        )
+        db, graph = self._get_graph()
+        db.update_graph(graph)
+
+        # Test if we have the new collections and graph relation
+        col_names = [c['name'] for c in db.collections()]
+
+        assert DummyFromCol1.__collection__ in col_names
+        assert DummyToCol1.__collection__ in col_names
+        assert DummyRelation.__collection__ in col_names
+
+        assert DummyFromCol2.__collection__ not in col_names
+        assert DummyToCol2.__collection__ not in col_names
+
+        gi = db.graphs()[0]
+        assert DummyRelation.__collection__ in [e['collection'] for e in gi['edge_definitions']]
+
+    def test_12_update_graph_update_connection(self):
+
+        UniversityGraph.graph_connections[-1] = GraphConnection(
+            [DummyFromCol1, DummyFromCol2], DummyRelation, [DummyToCol1, DummyToCol2]
+        )
+
+        db, graph = self._get_graph()
+        db.update_graph(graph)
+
+        # Test if we have the new collections and graph relation
+        col_names = [c['name'] for c in db.collections()]
+
+        assert DummyFromCol1.__collection__ in col_names
+        assert DummyFromCol2.__collection__ in col_names
+        assert DummyToCol1.__collection__ in col_names
+        assert DummyToCol2.__collection__ in col_names
+        assert DummyRelation.__collection__ in col_names
+
+        gi = db.graphs()[0]
+        assert DummyRelation.__collection__ in [e['collection'] for e in gi['edge_definitions']]
+
+    def test_13_update_graph_remove_connection(self):
+
+        # Remove the dummy relation connection
+        UniversityGraph.graph_connections.pop()
+
+        db, graph = self._get_graph()
+        db.update_graph(graph)
+
+        # Test if we have the new collections and graph relation
+        col_names = [c['name'] for c in db.collections()]
+
+        # Verify that the collections still exist
+        assert DummyFromCol1.__collection__ in col_names
+        assert DummyFromCol2.__collection__ in col_names
+        assert DummyToCol1.__collection__ in col_names
+        assert DummyToCol2.__collection__ in col_names
+        assert DummyRelation.__collection__ in col_names
+
+        gi = db.graphs()[0]
+        assert DummyRelation.__collection__ not in [e['collection'] for e in gi['edge_definitions']]
+
+    def test_20_drop_graph_without_collections(self):
+        db, graph = self._get_graph()
+        db.drop_graph(graph, drop_collections=False)
+
+        # verify that the collections are not deleted
+        assert 'teaches' in [c['name'] for c in db.collections()]
+
+    def test_21_drop_graph_with_collections(self):
+        # making sure we remove the dummy collections too
+        UniversityGraph.graph_connections[-1] = GraphConnection(
+            [DummyFromCol1, DummyFromCol2], DummyRelation, [DummyToCol1, DummyToCol2]
+        )
+        db, graph = self._get_graph()
+        db.create_graph(graph)
+        db.drop_graph(graph, drop_collections=True)
+
+        # verify that the collections are not deleted
+        assert 'teaches' not in [c['name'] for c in db.collections()]

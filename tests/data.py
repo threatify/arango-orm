@@ -93,6 +93,46 @@ class Area(Collection):
     _key = String(required=True)  # area name
 
 
+# DUMMY COLLECTIONS #
+
+
+class DummyFromCol1(Collection):
+
+    __collection__ = 'dummy_from_col_1'
+
+    _key = String(required=True)
+
+
+class DummyFromCol2(Collection):
+
+    __collection__ = 'dummy_from_col_2'
+
+    _key = String(required=True)
+
+
+class DummyRelation(Relation):
+
+    __collection__ = 'dummy_relation'
+
+    _key = String(required=True)
+    _from = String()
+    _to = String()
+
+
+class DummyToCol1(Collection):
+
+    __collection__ = 'dummy_to_col_1'
+
+    _key = String(required=True)
+
+
+class DummyToCol2(Collection):
+
+    __collection__ = 'dummy_to_col_2'
+
+    _key = String(required=True)
+
+
 class UniversityGraph(Graph):
 
     __graph__ = 'university_graph'

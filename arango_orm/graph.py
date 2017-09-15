@@ -31,19 +31,19 @@ class GraphConnection(object):
         Convert the GraphConnection relation to dict understandable by the underlying
         python-arango driver
         """
-        
+
         cols_from = []
         cols_to = []
 
-        if isinstance(self._collections_from, (list, tuple)):
-            cols_from = self._collections_from
+        if isinstance(self.collections_from, (list, tuple)):
+            cols_from = self.collections_from
         else:
-            cols_from = [self._collections_from, ]
+            cols_from = [self.collections_from, ]
 
-        if isinstance(self._collections_to, (list, tuple)):
-            cols_to = self._collections_to
+        if isinstance(self.collections_to, (list, tuple)):
+            cols_to = self.collections_to
         else:
-            cols_to = [self._collections_to, ]
+            cols_to = [self.collections_to, ]
 
         from_col_names = [col.__collection__ for col in cols_from]
         to_col_names = [col.__collection__ for col in cols_to]

@@ -6,7 +6,7 @@ from copy import deepcopy
 from inspect import isclass
 
 from arango.database import Database as ArangoDatabase
-from .collections import CollectionBase, Collection, Relation
+from .collections import CollectionBase, Collection
 from .query import Query
 
 log = logging.getLogger(__name__)
@@ -119,18 +119,19 @@ class Database(ArangoDatabase):
 
             try:
                 self.create_collection(col_obj)
-            except Exception as exp:
+            except Exception:
                 log.warning("Error creating collection %s, it probably already exists",
                             col_obj.__collection__)
 
         for _, rel_obj in graph_object.edges.items():
 
-            if 'ignore_collections' in kwargs and col_obj in kwargs['ignore_collections']:
+            if 'ignore_collections' in kwargs and \
+                    rel_obj.__collection__ in kwargs['ignore_collections']:
                 continue
 
             try:
                 self.create_collection(rel_obj, edge=True)
-            except Exception as exp:
+            except Exception:
                 log.warning("Error creating edge collection %s, it probably already exists",
                             rel_obj.__collection__)
 
@@ -167,26 +168,6 @@ class Database(ArangoDatabase):
         so those collections are not dropped
         """
 
-        # graph = self._db.graph(graph_object.__graph__)
-        # 
-        # if drop_collections:
-        #     for col in graph_object.edges:
-        # 
-        #         if 'ignore_collections' in kwargs and col in kwargs['ignore_collections']:
-        #             continue
-        # 
-        #         log.debug("Dropping edge %s", col)
-        #         print("Dropping edge %s", col)
-        #         graph.delete_edge_definition(col, purge=True)
-        # 
-        #     for col in graph_object.vertices:
-        # 
-        #         if 'ignore_collections' in kwargs and col in kwargs['ignore_collections']:
-        #             continue
-        # 
-        #         log.debug("Dropping collection %s", col)
-        #         graph.delete_vertex_collection(col, purge=True)
-
         self._db.delete_graph(
             graph_object.__graph__,
             ignore_missing=True,
@@ -196,12 +177,11 @@ class Database(ArangoDatabase):
         """
         Update existing graph object by adding collections and edge collections that are
         present in graph definition but not present within the graph in the database.
-        
+
         Note: We delete edge definitions if they no longer exist in the graph class but we
         don't drop collections
         """
 
-        graph_edge_definitions = []
         if graph_info is None:
             graph_info = self._get_graph_info(graph_object)
 
@@ -214,11 +194,11 @@ class Database(ArangoDatabase):
                 if col_obj.__collection__ in existing_collection_names:
                     log.debug("Collection %s already exists", col_obj.__collection__)
                     continue
-        
+
                 log.info("+ Creating collection %s", col_obj.__collection__)
                 self.create_collection(col_obj)
 
-            except Exception as exp:
+            except Exception:
                 log.warning("Error creating collection %s, it probably already exists",
                             col_obj.__collection__)
 
@@ -230,27 +210,27 @@ class Database(ArangoDatabase):
 
                 log.info("+ Creating edge collection %s", rel_obj.__collection__)
                 self.create_collection(rel_obj, edge=True)
-            except Exception as exp:
+            except Exception:
                 log.warning("Error creating edge collection %s, it probably already exists",
                             rel_obj.__collection__)
 
-        existing_edges = dict([(e['name'],e) for e in graph_object._graph.edge_definitions()])
-        
+        existing_edges = dict([(e['name'], e) for e in graph_object._graph.edge_definitions()])
+
         for _, relation_obj in graph_object.edges.items():
-        
+
             cols_from = []
             cols_to = []
-        
+
             if isinstance(relation_obj._collections_from, (list, tuple)):
                 cols_from = relation_obj._collections_from
             else:
                 cols_from = [relation_obj._collections_from, ]
-        
+
             if isinstance(relation_obj._collections_to, (list, tuple)):
                 cols_to = relation_obj._collections_to
             else:
                 cols_to = [relation_obj._collections_to, ]
-        
+
             from_col_names = [col.__collection__ for col in cols_from]
             to_col_names = [col.__collection__ for col in cols_to]
 
@@ -259,15 +239,13 @@ class Database(ArangoDatabase):
                 'from_collections': from_col_names,
                 'to_collections': to_col_names
             }
-            
+
             # if edge does not already exist, create it
             if edge_definition['name'] not in existing_edges:
                 log.info("  + creating graph edge definition: %r", edge_definition)
                 graph_object._graph.create_edge_definition(**edge_definition)
             else:
                 # if edge definition exists, see if it needs updating
-                
-
                 # compare edges
                 if not self._is_same_edge(edge_definition, existing_edges[edge_definition['name']]):
                     # replace_edge_definition
@@ -276,8 +254,8 @@ class Database(ArangoDatabase):
                     graph_object._graph.replace_edge_definition(**edge_definition)
 
         # Remove any edge definitions that are present in DB but not in graph definition
-        graph_connections = dict([(gc.relation.__collection__, gc) \
-            for gc in graph_object.graph_connections])
+        graph_connections = dict([(gc.relation.__collection__, gc)
+                                  for gc in graph_object.graph_connections])
 
         for edge_name, ee in existing_edges.items():
             if edge_name not in graph_connections:
@@ -292,12 +270,12 @@ class Database(ArangoDatabase):
         Compare given edge dicts and return True if both dicts have same keys and values else
         return False
         """
-        
-        #{'name': 'dns_info', 'to_collections': ['domains'], 'from_collections': ['dns_records']}
+
+        # {'name': 'dns_info', 'to_collections': ['domains'], 'from_collections': ['dns_records']}
         assert e1['name'] == e2['name']
 
         if len(e1['to_collections']) != len(e2['to_collections']) or \
-            len(e1['from_collections']) != len(e2['from_collections']):
+                len(e1['from_collections']) != len(e2['from_collections']):
 
             return False
 
@@ -312,7 +290,6 @@ class Database(ArangoDatabase):
                     return False
 
         return True
-
 
     def _get_graph_info(self, graph_obj):
 
@@ -343,7 +320,6 @@ class Database(ArangoDatabase):
                 log.debug("Graph %s already exists", graph_obj.__graph__)
                 graph_instance = graph_obj(connection=self)
                 self.update_graph(graph_instance, graph_info)
-
 
         exclude_collections = [c['name'] for c in self._db.collections()]
 
