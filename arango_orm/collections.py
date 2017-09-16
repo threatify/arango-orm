@@ -1,6 +1,3 @@
-from abc import ABCMeta, abstractmethod
-
-from six import with_metaclass
 from marshmallow import (
     Schema, fields, ValidationError
 )
@@ -11,16 +8,12 @@ class MemberExistsException(Exception):
     pass
 
 
-class CollectionBase(with_metaclass(ABCMeta)):
+class CollectionBase(object):
     "Base class for Collections, Nodes and Links"
 
     _key_field = None
     _allow_extra_fields = True
     _collection_config = {}
-
-    @abstractmethod
-    def __init__(self, collection_name):
-        pass
 
     @classmethod
     def schema(cls):
@@ -187,25 +180,40 @@ class Relation(Collection):
         ret = "<" + self.__class__.__name__ + '('
 
         if hasattr(self, '_key'):
-            ret += "_key=" + getattr(self, '_key')
+            ret += "_key=" + str(getattr(self, '_key'))
 
         if hasattr(self, '_from') and hasattr(self, '_to'):
-            ret += ", _from={}, _to={}".format(getattr(self, '_from'), getattr(self, '_to'))
+            ret += ", _from={}, _to={}".format(
+                str(getattr(self, '_from', '')), str(getattr(self, '_to')))
 
         ret += ")>"
 
         return ret
 
     @classmethod
-    def _load(cls, in_dict):
+    def _load(cls, in_dict, instance=None, db=None):
         "Create object from given dict"
+
+        if instance:
+            in_dict = dict(instance._dump(), **in_dict)
 
         data, errors = cls.schema().load(in_dict)
         if errors:
             raise RuntimeError("Error loading object of relation {} - {}".format(
                 cls.__name__, errors))
 
+        # add any extra fields present in in_dict into data
+        if cls._allow_extra_fields:
+            for k, v in in_dict.items():
+                if k not in data and not k.startswith('_'):
+                    data[k] = v
+
         new_obj = cls()
+
+        if db:
+            new_obj._db = db
+        else:
+            new_obj._db = getattr(instance, '_db', None)
 
         for k, v in data.items():
             if k in cls._safe_list or (k in dir(cls) and callable(getattr(cls, k))):
