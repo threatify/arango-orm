@@ -2,14 +2,34 @@ from arango_orm.fields import String, Date, Integer, Boolean
 from arango_orm import Collection, Relation, Graph, GraphConnection
 
 
+class lazy_property(object):
+    def __init__(self, fget):
+        self.fget = fget
+
+    def __get__(self, instance, cls):
+        value = self.fget(instance)
+        setattr(instance, self.fget.__name__, value)
+        return value
+
+
 class Person(Collection):
 
     __collection__ = 'persons'
     _index = [{'type': 'hash', 'unique': False, 'fields': ['name']}]
+    _allow_extra_fields = False  # prevent extra properties from saving into DB
 
     _key = String(required=True)
     name = String(required=True, allow_none=False)
+    age = Integer(missing=None)
     dob = Date()
+
+    @property
+    def is_adult(self):
+        return self.age and self.age >= 18
+
+    @lazy_property
+    def lazy_is_adult(self):
+        return self.age and self.age >= 18
 
     def __str__(self):
         return "<Person(" + self.name + ")>"
