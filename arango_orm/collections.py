@@ -107,6 +107,9 @@ class Collection(CollectionBase):
         else:
             new_obj._db = getattr(instance, '_db', None)
 
+        if hasattr(new_obj, '_pre_process'):
+            new_obj._pre_process()
+
         for k, v in data.items():
             if k in cls._safe_list or (k in dir(cls) and callable(getattr(cls, k))):
                 raise MemberExistsException(
@@ -120,6 +123,9 @@ class Collection(CollectionBase):
 
         if '_id' in in_dict:
             new_obj.__collection__ = in_dict['_id'].split('/')[0]
+
+        if hasattr(new_obj, '_post_process'):
+            new_obj._post_process()
 
         return new_obj
 

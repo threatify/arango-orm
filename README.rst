@@ -473,3 +473,30 @@ same structure as graph.expand method:
     gotham_residents = [rel._next.name for rel in obj._relations['resides_in']]
     print(gotham_residents)
     # ['Bruce Wayne', 'John Wayne']
+
+
+CHANGES
+=======
+
+Version 0.3
+-----------
+
+- Schema fields are now be defined inside the main model class instead of a nested _Schema child class
+- Allow extra fields not present in the schema to be present in collections without any validation or type conversion
+- Load and dump extra fields only if _allow_extra_fields is set to True for the collection class
+- Bound db to model object. If an object has interacted with the db then it's _db attribute points to the database
+- Collections now have _pre_process and _post_process methods that get called before and after data loading into the collection respectively
+- Database.create_all method creates all collections, relations, graphs (with their edge definitions) that are passed onto it as a list.
+- Database.update_graph creates collections, relations, edge definitions and drops or replaces edge definitions if they have changed. Does not drop any collection or relation.
+
+
+Version 0.2
+-----------
+
+- Support for creating indices by defining _index attribute in model definition
+
+Version 0.2.1
+-------------
+
+- Graph creation also supports creating indices from collection class _index attribute
+- Support for passing collection create options as supported by `python-arango database.create_collection <http://python-driver-for-arangodb.readthedocs.io/en/stable/classes.html#arango.database.Database.create_collection>`_ method to database.create_colltion method
