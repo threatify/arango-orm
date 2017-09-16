@@ -2,7 +2,7 @@
 
 from datetime import date
 from . import TestBase
-from .data import Person
+from .data import Person, Car
 
 
 class TestCollection(TestBase):
@@ -43,3 +43,29 @@ class TestCollection(TestBase):
         print(d)
         self.assert_all_in(['name', '_key'], d)
         assert d['dob'] is None
+
+    def test_05_object_load_and_dump_with_extra_fields_disabled(self):
+
+        d = {'_key': 'person_1', 'name': 'John Doe', 'dob': '2016-09-12', 'profession': 'absent'}
+        p = Person._load(d)
+
+        assert hasattr(p, '_key')
+        assert hasattr(p, 'name')
+        assert hasattr(p, 'dob')
+        assert hasattr(p, 'profession') is False
+
+        d2 = p._dump()
+        self.assert_all_in(['_key', 'name', 'dob'], d2)
+        assert 'profession' not in d2
+
+    def test_06_object_load_and_dump_with_extra_fields_enabled(self):
+
+        d = {'make': 'Mitsubishi', 'model': 'Lancer', 'year': 2005, 'nickname': 'Lancer Evo'}
+        c = Car._load(d)
+
+        assert hasattr(c, 'make')
+        assert hasattr(c, 'model')
+        assert hasattr(c, 'year')
+        assert hasattr(c, 'nickname')
+
+        self.assert_all_in(['make', 'model', 'year', 'nickname'], c._dump())

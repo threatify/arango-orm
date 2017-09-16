@@ -5,6 +5,7 @@ from arango_orm import Collection, Relation, Graph, GraphConnection
 class Person(Collection):
 
     __collection__ = 'persons'
+    _allow_extra_fields = False
     _index = [{'type': 'hash', 'unique': False, 'fields': ['name']}]
 
     _key = String(required=True)
@@ -18,6 +19,7 @@ class Person(Collection):
 class Car(Collection):
 
     __collection__ = 'cars'
+    _allow_extra_fields = True
 
     make = String(required=True)
     model = String(required=True)
@@ -99,6 +101,7 @@ class Area(Collection):
 class DummyFromCol1(Collection):
 
     __collection__ = 'dummy_from_col_1'
+    _allow_extra_fields = True
 
     _key = String(required=True)
 
