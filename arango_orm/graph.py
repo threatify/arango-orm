@@ -26,6 +26,19 @@ class GraphConnection(object):
 
         self.relation = relation_obj
 
+    def __str__(self):
+        ret = "<{}(collections_from={}, relation={}, collections_to={})>".format(
+            self.__class__.__name__,
+            str(self.collections_from),
+            str(self.relation),
+            str(self.collections_to)
+        )
+
+        return ret
+
+    def __repr__(self):
+        return self.__str__()
+
     def to_dict(self):
         """
         Convert the GraphConnection relation to dict understandable by the underlying

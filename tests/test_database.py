@@ -128,6 +128,9 @@ class TestDatabase(TestBase):
         UniversityGraph.graph_connections.append(
             GraphConnection(DummyFromCol1, DummyRelation, DummyToCol1)
         )
+
+        assert 5 == len(UniversityGraph.graph_connections)
+
         db, graph = self._get_graph()
         db.update_graph(graph)
 
@@ -150,6 +153,7 @@ class TestDatabase(TestBase):
             [DummyFromCol1, DummyFromCol2], DummyRelation, [DummyToCol1, DummyToCol2]
         )
 
+        assert 5 == len(UniversityGraph.graph_connections)
         db, graph = self._get_graph()
         db.update_graph(graph)
 
@@ -169,6 +173,7 @@ class TestDatabase(TestBase):
 
         # Remove the dummy relation connection
         UniversityGraph.graph_connections.pop()
+        assert 4 == len(UniversityGraph.graph_connections)
 
         db, graph = self._get_graph()
         db.update_graph(graph)
@@ -195,9 +200,9 @@ class TestDatabase(TestBase):
 
     def test_15_drop_graph_with_collections(self):
         # making sure we remove the dummy collections too
-        UniversityGraph.graph_connections[-1] = GraphConnection(
+        UniversityGraph.graph_connections.append(GraphConnection(
             [DummyFromCol1, DummyFromCol2], DummyRelation, [DummyToCol1, DummyToCol2]
-        )
+        ))
         db, graph = self._get_graph()
         db.create_graph(graph)
         db.drop_graph(graph, drop_collections=True)
@@ -205,9 +210,10 @@ class TestDatabase(TestBase):
         # verify that the collections are not deleted
         assert 'teaches' not in [c['name'] for c in db.collections()]
 
-    def test_16_create_all(self):
         # Remove the dummy relation connection
         UniversityGraph.graph_connections.pop()
+
+    def test_16_create_all(self):
 
         db_objects = [UniversityGraph, DummyFromCol1, DummyToCol1]
         db = self._get_db_obj()
@@ -234,6 +240,8 @@ class TestDatabase(TestBase):
         assert SpecializesIn.__collection__ in col_names
         assert Area.__collection__ in col_names
 
-        # Now drop the graph
+        # Now drop the graph and any remaining collections
         db, graph = self._get_graph()
         db.drop_graph(graph, drop_collections=True)
+        db.drop_collection(DummyFromCol1)
+        db.drop_collection(DummyToCol1)
