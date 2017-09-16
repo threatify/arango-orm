@@ -1,3 +1,4 @@
+from six import with_metaclass
 from marshmallow import (
     Schema, fields, ValidationError
 )
@@ -8,7 +9,25 @@ class MemberExistsException(Exception):
     pass
 
 
-class CollectionBase(object):
+class CollectionMeta(type):
+    def __new__(cls, name, bases, attrs):
+        super_new = super(CollectionMeta, cls).__new__
+
+        new_fields = {}
+        for obj_name, obj in attrs.items():
+            if isinstance(obj, fields.Field):
+                # add to schema fields
+                new_fields[obj_name] = attrs.get(obj_name)
+
+        for k in new_fields:
+            attrs.pop(k)
+
+        new_class = super_new(cls, name, bases, attrs)
+        new_class._fields = dict(getattr(cls, '_fields', {}), **new_fields)
+        return new_class
+
+
+class CollectionBase(with_metaclass(CollectionMeta)):
     "Base class for Collections, Nodes and Links"
 
     _key_field = None
@@ -16,29 +35,14 @@ class CollectionBase(object):
     _collection_config = {}
 
     @classmethod
-    def schema(cls):
-
-        fields_dict = {}
-
-        for attr_name in dir(cls):
-            attr_obj = getattr(cls, attr_name)
-            if not callable(attr_obj) and isinstance(attr_obj, fields.Field):
-                # add to schema fields
-                fields_dict[attr_name] = attr_obj
-
+    def schema(cls, *args, **kwargs):
         SchemaClass = type(
             cls.__name__ + 'Schema',
             (Schema, ),
-            fields_dict
+            cls._fields.copy()
         )
 
-        return SchemaClass()
-
-    def remove_schema_fields(self):
-        for attr_name in dir(self):
-            attr_obj = getattr(self, attr_name)
-            if not callable(attr_obj) and isinstance(attr_obj, fields.Field):
-                setattr(self, attr_name, None)
+        return SchemaClass(*args, **kwargs)
 
 
 class Collection(CollectionBase):
@@ -47,7 +51,8 @@ class Collection(CollectionBase):
 
     _safe_list = [
         '__collection__', '_safe_list', '_relations', '_id', '_index',
-        '_collection_config', '_post_process', '_pre_process', '_fields_info'
+        '_collection_config', '_post_process', '_pre_process', '_fields_info',
+        '_fields'
     ]
 
     def __init__(self, collection_name=None, **kwargs):
@@ -58,6 +63,10 @@ class Collection(CollectionBase):
         if '_key' not in kwargs:
             self._key = None
 
+        for k in self._fields:
+            setattr(self, k, kwargs.pop(k, None))
+
+        # FIXME: shall we ignore attrs not defined in schema
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -77,7 +86,6 @@ class Collection(CollectionBase):
     @classmethod
     def _load(cls, in_dict, instance=None, db=None):
         "Create object from given dict"
-
         if instance:
             in_dict = dict(instance._dump(), **in_dict)
 
@@ -119,7 +127,6 @@ class Collection(CollectionBase):
         "Dump all object attributes into a dict"
 
         schema = self.schema
-        self.remove_schema_fields()
         data, errors = schema().dump(self)
 
         if errors:
@@ -154,7 +161,7 @@ class Relation(Collection):
 
     _safe_list = [
         '__collection__', '_safe_list', '_id', '_collections_from', '_collections_to',
-        '_object_from', '_object_to', '_index', '_collection_config'
+        '_object_from', '_object_to', '_index', '_collection_config', '_fields'
     ]
 
     def __init__(self, collection_name=None, **kwargs):

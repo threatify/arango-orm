@@ -65,7 +65,7 @@ class TestDatabase(TestBase):
 
         db = self._get_db_obj()
 
-        p = Person(name='test', _key='12312', dob=date(year=2016, month=9, day=12))
+        p = Person(name='test', _key='12312', age=18, dob=date(year=2016, month=9, day=12))
         db.add(p)
 
     def test_06_delete_records(self):
