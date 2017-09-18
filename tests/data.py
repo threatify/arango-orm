@@ -23,6 +23,7 @@ class Person(Collection):
     name = String(required=True, allow_none=False)
     age = Integer(missing=None)
     dob = Date()
+    is_staff = Boolean(default=False)
 
     @property
     def is_adult(self):
