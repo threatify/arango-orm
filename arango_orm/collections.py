@@ -155,12 +155,12 @@ class Collection(CollectionBase):
         # Also dump extra fields as is without any validation or conversion
         if self._allow_extra_fields:
             for prop in dir(self):
-                if prop in data or callable(getattr(self, prop)) or prop.startswith('_'):
-                    continue
-                
                 if hasattr(self.__class__, prop) and \
                     isinstance(getattr(self.__class__, prop), property):
 
+                    continue
+
+                if prop in data or callable(getattr(self, prop)) or prop.startswith('_'):
                     continue
 
                 data[prop] = getattr(self, prop)
