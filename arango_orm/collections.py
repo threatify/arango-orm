@@ -1,7 +1,10 @@
+import logging
 from six import with_metaclass
 from marshmallow import (
     Schema, fields, ValidationError
 )
+
+log = logging.getLogger(__name__)
 
 
 class MemberExistsException(Exception):
@@ -74,7 +77,7 @@ class Collection(CollectionBase):
         ret = "<" + self.__class__.__name__
 
         if hasattr(self, '_key'):
-            ret += "(_key=" + getattr(self, '_key') + ')'
+            ret += "(_key=" + str(getattr(self, '_key')) + ')'
 
         ret += ">"
 
@@ -116,9 +119,13 @@ class Collection(CollectionBase):
                     "{} is already a member of {} instance and cannot be overwritten".format(
                         k, cls.__name__))
 
-            setattr(new_obj, k, v)
+            try:
+                setattr(new_obj, k, v)
+            except AttributeError:
+                # ignore if we can't set attribute (it's most likely a @property)
+                log.warning("could not set attribute %s to %r. Invalid data?", k, v)
 
-        if '_key' in in_dict and not hasattr(new_obj, '_key'):
+        if '_key' in in_dict and (not hasattr(new_obj, '_key') or new_obj._key is None):
             setattr(new_obj, '_key', in_dict['_key'])
 
         if '_id' in in_dict:
@@ -148,7 +155,8 @@ class Collection(CollectionBase):
         # Also dump extra fields as is without any validation or conversion
         if self._allow_extra_fields:
             for prop in dir(self):
-                if prop in data or callable(getattr(self, prop)) or prop.startswith('_'):
+                if prop in data or callable(getattr(self, prop)) or prop.startswith('_') or \
+                    isinstance(getattr(self.__class__, prop), property):
                     continue
 
                 data[prop] = getattr(self, prop)
@@ -236,7 +244,7 @@ class Relation(Collection):
 
             setattr(new_obj, k, v)
 
-        if '_key' in in_dict and not hasattr(new_obj, '_key'):
+        if '_key' in in_dict and (not hasattr(new_obj, '_key') or new_obj._key is None):
             setattr(new_obj, '_key', in_dict['_key'])
 
         if '_id' in in_dict:
