@@ -1,7 +1,7 @@
 import logging
 from six import with_metaclass
 from marshmallow import (
-    Schema, fields, ValidationError
+    Schema, fields, ValidationError, missing
 )
 
 log = logging.getLogger(__name__)
@@ -66,8 +66,9 @@ class Collection(CollectionBase):
         if '_key' not in kwargs:
             self._key = None
 
-        for k in self._fields:
-            setattr(self, k, kwargs.pop(k, None))
+        for field_name, field in self._fields.items():
+            default_value = None if field.default is missing else field.default
+            setattr(self, field_name, kwargs.pop(field_name, default_value))
 
         # FIXME: shall we ignore attrs not defined in schema
         for k, v in kwargs.items():
