@@ -41,22 +41,11 @@ class CollectionBase(with_metaclass(CollectionMeta)):
 
     @classmethod
     def schema(cls, *args, **kwargs):
-        
-        def get_class_fields(cls_to_check):
-            cls_fields = {}
-            if hasattr(cls_to_check, '_fields'):
-                cls_fields = cls_to_check._fields.copy()
-                for base_class in cls_to_check.__bases__:
-                    cls_fields.update(get_class_fields(base_class))
-
-            return cls_fields
-        
-        final_fields = get_class_fields(cls)
 
         SchemaClass = type(
             cls.__name__ + 'Schema',
             (Schema, ),
-            final_fields
+            cls._fields.copy()
         )
 
         return SchemaClass(*args, **kwargs)
