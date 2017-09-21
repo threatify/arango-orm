@@ -192,6 +192,15 @@ class Query(object):
 
         return ret
 
+    def first(self):
+        "Return the first record that matches the query"
+
+        rec = self.limit(1).all()
+        if len(rec) > 0:
+            return rec[0]
+        else:
+            return None
+
     def aql(self, query, **kwargs):
         """
         Return results based on given AQL query. bind_vars already contains @@collection param.

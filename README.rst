@@ -111,6 +111,12 @@ ________________________________
 
     students = db.query(Student).all()
 
+Get First Record Matching the Query
+____________________________________
+
+.. code-block:: python
+
+    first_student = db.query(Student).first()
 
 Filter Records
 ______________
@@ -477,6 +483,11 @@ same structure as graph.expand method:
 
 CHANGES
 =======
+
+Version 0.3.1
+-------------
+
+- Query.first() method implementation to return the first record that matches the query
 
 Version 0.3
 -----------
