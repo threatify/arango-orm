@@ -28,7 +28,7 @@ class CollectionMeta(type):
             attrs.pop(k)
 
         new_class = super_new(cls, name, bases, attrs)
-        new_class._fields = dict(getattr(cls, '_fields', {}), **new_fields)
+        new_class._fields = dict(getattr(new_class, '_fields', {}), **new_fields)
         return new_class
 
 
