@@ -13,7 +13,9 @@ class MemberExistsException(Exception):
 
 
 class CollectionMeta(type):
+
     def __new__(cls, name, bases, attrs):
+
         super_new = super(CollectionMeta, cls).__new__
 
         new_fields = {}
@@ -34,15 +36,27 @@ class CollectionBase(with_metaclass(CollectionMeta)):
     "Base class for Collections, Nodes and Links"
 
     _key_field = None
-    _allow_extra_fields = True
+    _allow_extra_fields = False
     _collection_config = {}
 
     @classmethod
     def schema(cls, *args, **kwargs):
+        
+        def get_class_fields(cls_to_check):
+            cls_fields = {}
+            if hasattr(cls_to_check, '_fields'):
+                cls_fields = cls_to_check._fields.copy()
+                for base_class in cls_to_check.__bases__:
+                    cls_fields.update(get_class_fields(base_class))
+
+            return cls_fields
+        
+        final_fields = get_class_fields(cls)
+
         SchemaClass = type(
             cls.__name__ + 'Schema',
             (Schema, ),
-            cls._fields.copy()
+            final_fields
         )
 
         return SchemaClass(*args, **kwargs)
