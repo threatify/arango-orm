@@ -1,6 +1,8 @@
 "Test cases for the :module:`arango_orm.database`"
 
 from datetime import date
+from arango_orm import CollectionBase, Collection
+from arango_orm.fields import String, Integer, Dict, DateTime
 from . import TestBase
 from .data import Person, Car
 
@@ -70,10 +72,7 @@ class TestCollection(TestBase):
 
         self.assert_all_in(['make', 'model', 'year', 'nickname'], c._dump())
 
-    def test_collection_mixin(self):
-        from arango_orm import CollectionBase, Collection
-        from arango_orm.fields import String, Dict, DateTime
-
+    def test_07_collection_mixin(self):
         class ResultMixin(CollectionBase):
             _key = String()
             _timestamp = DateTime()
@@ -90,4 +89,22 @@ class TestCollection(TestBase):
             '_key', '_timestamp', 'host', 'status', 'error_message', 'stats'
         ], PingResult._fields)
 
-        assert type(PingResult._fields['stats']) is Dict  # not String from ResultMixin
+        assert isinstance(PingResult._fields['stats'], Dict)  # not String from ResultMixin
+
+    def test_08_collection_multi_layer_inheritance(self):
+        class A(CollectionBase):
+            _key = String()
+            xx = Integer()
+            aa = String()
+
+        class B(A):
+            xx = String()
+            bb = String()
+
+        class C(B):
+            xx = Dict()
+            cc = String()
+
+        self.assert_all_in(['_key', 'aa', 'bb', 'cc'], C._fields)
+        assert isinstance(B._fields['xx'], String)
+        assert isinstance(C._fields['xx'], Dict)
