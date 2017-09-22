@@ -91,20 +91,28 @@ class TestCollection(TestBase):
 
         assert isinstance(PingResult._fields['stats'], Dict)  # not String from ResultMixin
 
-    def test_08_collection_multi_layer_inheritance(self):
-        class A(CollectionBase):
+    def test_08_multi_level_collection_inheritence(self):
+        from arango_orm import CollectionBase, Collection
+        from arango_orm.fields import String, Dict, DateTime
+
+        class ResultMixin(CollectionBase):
             _key = String()
-            xx = Integer()
-            aa = String()
+            _timestamp = DateTime()
+            stats = String()
 
-        class B(A):
-            xx = String()
-            bb = String()
+        class Result(ResultMixin):
+            host = String(required=True)
+            status = String(required=True)   # UP, DOWN, SLOW
+            error_message = String()
 
-        class C(B):
-            xx = Dict()
-            cc = String()
+        class PingResult(Result, Collection):
+            __collection__ = "ping_results"
 
-        self.assert_all_in(['_key', 'aa', 'bb', 'cc'], C._fields)
-        assert isinstance(B._fields['xx'], String)
-        assert isinstance(C._fields['xx'], Dict)
+            stats = Dict()
+
+        print(PingResult._fields.keys())
+        self.assert_all_in([
+            '_key', '_timestamp', 'host', 'status', 'error_message', 'stats'
+        ], PingResult._fields)
+
+        assert isinstance(PingResult._fields['stats'], Dict)  # not String from ResultMixin
