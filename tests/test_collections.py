@@ -70,7 +70,7 @@ class TestCollection(TestBase):
 
         self.assert_all_in(['make', 'model', 'year', 'nickname'], c._dump())
 
-    def test_collection_mixin(self):
+    def test_07_collection_mixin(self):
         from arango_orm import CollectionBase, Collection
         from arango_orm.fields import String, Dict, DateTime
 
@@ -86,6 +86,32 @@ class TestCollection(TestBase):
             error_message = String()
             stats = Dict()
 
+        self.assert_all_in([
+            '_key', '_timestamp', 'host', 'status', 'error_message', 'stats'
+        ], PingResult._fields)
+
+        assert type(PingResult._fields['stats']) is Dict  # not String from ResultMixin
+
+    def test_08_multi_level_collection_inheritence(self):
+        from arango_orm import CollectionBase, Collection
+        from arango_orm.fields import String, Dict, DateTime
+
+        class ResultMixin(CollectionBase):
+            _key = String()
+            _timestamp = DateTime()
+            stats = String()
+
+        class Result(ResultMixin):
+            host = String(required=True)
+            status = String(required=True)   # UP, DOWN, SLOW
+            error_message = String()
+
+        class PingResult(Result, Collection):
+            __collection__ = "ping_results"
+
+            stats = Dict()
+
+        print(PingResult._fields.keys())
         self.assert_all_in([
             '_key', '_timestamp', 'host', 'status', 'error_message', 'stats'
         ], PingResult._fields)
