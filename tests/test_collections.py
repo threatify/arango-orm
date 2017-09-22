@@ -1,6 +1,8 @@
 "Test cases for the :module:`arango_orm.database`"
 
 from datetime import date
+from arango_orm import CollectionBase, Collection
+from arango_orm.fields import String, Integer, Dict, DateTime
 from . import TestBase
 from .data import Person, Car
 
@@ -71,9 +73,6 @@ class TestCollection(TestBase):
         self.assert_all_in(['make', 'model', 'year', 'nickname'], c._dump())
 
     def test_07_collection_mixin(self):
-        from arango_orm import CollectionBase, Collection
-        from arango_orm.fields import String, Dict, DateTime
-
         class ResultMixin(CollectionBase):
             _key = String()
             _timestamp = DateTime()
@@ -90,7 +89,7 @@ class TestCollection(TestBase):
             '_key', '_timestamp', 'host', 'status', 'error_message', 'stats'
         ], PingResult._fields)
 
-        assert type(PingResult._fields['stats']) is Dict  # not String from ResultMixin
+        assert isinstance(PingResult._fields['stats'], Dict)  # not String from ResultMixin
 
     def test_08_multi_level_collection_inheritence(self):
         from arango_orm import CollectionBase, Collection
@@ -116,4 +115,4 @@ class TestCollection(TestBase):
             '_key', '_timestamp', 'host', 'status', 'error_message', 'stats'
         ], PingResult._fields)
 
-        assert type(PingResult._fields['stats']) is Dict  # not String from ResultMixin
+        assert isinstance(PingResult._fields['stats'], Dict)  # not String from ResultMixin
