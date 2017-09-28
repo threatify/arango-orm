@@ -200,6 +200,12 @@ class Query(object):
             return rec[0]
         else:
             return None
+    
+    def one(self):
+        "Assert that only one record is present for the query and return that record"
+
+        assert 1 == self.count()
+        return self.first()
 
     def aql(self, query, **kwargs):
         """
