@@ -1,15 +1,7 @@
 from arango_orm.fields import String, Date, Integer, Boolean
 from arango_orm import Collection, Relation, Graph, GraphConnection
 
-
-class lazy_property(object):
-    def __init__(self, fget):
-        self.fget = fget
-
-    def __get__(self, instance, cls):
-        value = self.fget(instance)
-        setattr(instance, self.fget.__name__, value)
-        return value
+from .utils import lazy_property
 
 
 class Person(Collection):
