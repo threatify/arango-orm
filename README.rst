@@ -487,7 +487,7 @@ CHANGES
 Version 0.3.1
 -------------
 
-- Query.first() method implementation to return the first record that matches the query
+- Query.first() and Query.one() methods implementation to return the first record that matches the query
 
 Version 0.3
 -----------
