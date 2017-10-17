@@ -117,3 +117,11 @@ class TestCollection(TestBase):
         ], PingResult._fields)
 
         assert type(PingResult._fields['stats']) is Dict  # not String from ResultMixin
+
+    def test_09_load_from_instance_with_extra_patch_data(self):
+        p = Person(name='test', _key='12312', dob=date(year=2016, month=9, day=12))
+        np = Person._load({'name': 'Wonder'}, instance=p)
+
+        assert p.name == 'test'
+        assert np.name == 'Wonder'
+        assert np._key == '12312'
