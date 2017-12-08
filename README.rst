@@ -154,6 +154,10 @@ ______________________
     records = db.query(Student).filter(
                 "LIKE(rec.name, 'A%')", prepend_rec_name=False).sort("name DESC").limit(5).all()
 
+    # Query students with pagination (limit&offset)
+    page_num, per_page = 2, 10
+    page = db.query(Student).sort("name DESC").limit(per_page, start_from=(page_num - 1) * per_page)
+
 
 Update Multiple Records
 _______________________
