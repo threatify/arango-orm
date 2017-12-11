@@ -72,6 +72,8 @@ class Query(object):
             return self
 
         condition = ' AND '.join(['$REC.{0}==@{0}'.format(k) for k in kwargs])
+        if len(kwargs) > 1:
+            condition = '({0})'.format(condition)
 
         return self.filter(condition, _or=_or, prepend_rec_name=False,
                            rec_name_placeholder='$REC', **kwargs)
