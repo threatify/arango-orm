@@ -8,6 +8,7 @@ from inspect import isclass
 from arango.database import Database as ArangoDatabase
 from .collections import CollectionBase, Collection
 from .query import Query
+from .event import dispatch
 
 log = logging.getLogger(__name__)
 
@@ -72,6 +73,7 @@ class Database(ArangoDatabase):
 
     def add(self, entity):
         "Add a record to a collection"
+        dispatch(entity, 'pre_add', db=self)
 
         collection = self._db.collection(entity.__collection__)
         setattr(entity, '_db', self)
@@ -79,20 +81,29 @@ class Database(ArangoDatabase):
         if not getattr(entity, '_key', None) and '_key' in res:
             setattr(entity, '_key', res['_key'])
 
+        dispatch(entity, 'post_add', db=self, result=res)
         return res
 
     def delete(self, entity, **kwargs):
         "Delete given document"
+        dispatch(entity, 'pre_delete', db=self)
 
         collection = self._db.collection(entity.__collection__)
-        return collection.delete(entity._dump(only=('_key', ))['_key'], **kwargs)
+        res = collection.delete(entity._dump(only=('_key', ))['_key'], **kwargs)
+
+        dispatch(entity, 'post_delete', db=self, result=res)
+        return res
 
     def update(self, entity, **kwargs):
         "Update given document"
+        dispatch(entity, 'pre_update', db=self)
 
         collection = self._db.collection(entity.__collection__)
         setattr(entity, '_db', self)
-        return collection.update(entity._dump(), **kwargs)
+        res = collection.update(entity._dump(), **kwargs)
+
+        dispatch(entity, 'post_update', db=self, result=res)
+        return res
 
     def query(self, CollectionClass):
         "Query given collection"

@@ -3,6 +3,8 @@ import logging
 from arango import ArangoClient
 from arango_orm.database import Database
 
+from .utils import lazy_property
+
 log = logging.getLogger(__name__)
 
 
@@ -29,6 +31,10 @@ class TestBase(unittest.TestCase):
         db = Database(test_db)
 
         return db
+
+    @lazy_property
+    def db(self):
+        return TestBase._get_db_obj()
 
     def assert_all_in(self, keys, collection, exp_to_raise=AssertionError):
         "Assert that all given keys are present in the given collection, dict, list or tuple"

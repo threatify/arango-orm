@@ -80,6 +80,8 @@ class Collection(CollectionBase):
 
         for field_name, field in self._fields.items():  # pylint: disable=E1101
             default_value = None if field.default is missing else field.default
+            if callable(default_value):
+                default_value = default_value()
             setattr(self, field_name, kwargs.pop(field_name, default_value))
 
         # FIXME: shall we ignore attrs not defined in schema
