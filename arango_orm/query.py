@@ -47,7 +47,8 @@ class Query(object):
 
         return self._CollectionClass._load(doc_dict, db=self._db)
 
-    def filter(self, condition, _or=False, prepend_rec_name=True, rec_name_placeholder=None, **kwargs):
+    def filter(self, condition, _or=False, prepend_rec_name=True, rec_name_placeholder=None,
+               **kwargs):
         """
         Filter the results based on given condition. By default filter conditions are joined
         by AND operator if this method is called multiple times. If you want to use the OR operator
@@ -200,7 +201,7 @@ class Query(object):
             return rec[0]
         else:
             return None
-    
+
     def one(self):
         "Assert that only one record is present for the query and return that record"
 

@@ -1,5 +1,6 @@
 from arango_orm.fields import String, Date, Integer, Boolean
 from arango_orm import Collection, Relation, Graph, GraphConnection
+from arango_orm.references import relationship, graph_relationship
 
 
 class lazy_property(object):
@@ -25,6 +26,8 @@ class Person(Collection):
     dob = Date()
     is_staff = Boolean(default=False)
 
+    cars = relationship("Car", '_key', target_field='owner_id')
+
     @property
     def is_adult(self):
         return self.age and self.age >= 18
@@ -45,6 +48,9 @@ class Car(Collection):
     make = String(required=True)
     model = String(required=True)
     year = Integer(required=True)
+    owner_id = String()
+
+    owner = relationship(Person, 'owner_id')
 
     def __str__(self):
         return "<Car({} - {} - {})>".format(self.make, self.model, self.year)
@@ -200,6 +206,8 @@ areas_data = [
 specializations_data = [
     SpecializesIn(_from="teachers/T001", _to="subjects/ITP101", expertise_level="medium")
 ]
+
+
 
 
 # FOR v, e, p IN 1..3 INBOUND 'areas/gotham'
