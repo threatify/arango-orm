@@ -1,4 +1,4 @@
-import pdb
+# import pdb
 import logging
 from six import with_metaclass
 from marshmallow import (
@@ -107,7 +107,7 @@ class Collection(CollectionBase):
 
         if item not in super().__getattribute__('_refs_vals'):  # pylint: disable=E1101
 
-            print("trying to load ref val")
+            # print("trying to load ref val")
             # pdb.set_trace()
             if (hasattr(self, '_db') is False or
                     super().__getattribute__('_db') is None):  # pylint: disable=E1101

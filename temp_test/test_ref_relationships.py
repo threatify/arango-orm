@@ -30,7 +30,7 @@ class Person(Collection):
     dob = Date()
     is_staff = Boolean(default=False)
 
-    cars = relationship("Car", '_key', target_field='owner_id')
+    cars = relationship(__name__ + ".Car", '_key', target_field='owner_id')
 
     @property
     def is_adult(self):
@@ -85,3 +85,6 @@ print(c1.owner)
 print(c1.owner.name)
 print(c2.owner.name)
 print(c3.owner.name)
+
+print(p.cars)
+print(p.cars[0].make)
