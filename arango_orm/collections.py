@@ -1,34 +1,41 @@
+# import pdb
 import logging
 from six import with_metaclass
 from marshmallow import (
     Schema, fields, ValidationError, missing
 )
 
+from .references import Relationship, GraphRelationship
+from .exceptions import MemberExistsException, DetachedInstanceError
+
 log = logging.getLogger(__name__)
-
-
-class MemberExistsException(Exception):
-    "Exception to specify that a setting member already exists"
-    pass
 
 
 class CollectionMeta(type):
 
-    def __new__(cls, name, bases, attrs):
+    def __new__(mcs, name, bases, attrs):
 
-        super_new = super(CollectionMeta, cls).__new__
+        super_new = super(CollectionMeta, mcs).__new__
 
         new_fields = {}
+        refs = {}
+
         for obj_name, obj in attrs.items():
+
             if isinstance(obj, fields.Field):
                 # add to schema fields
                 new_fields[obj_name] = attrs.get(obj_name)
 
+            elif isinstance(obj, (Relationship, GraphRelationship)):
+                refs[obj_name] = attrs.get(obj_name)
+
         for k in new_fields:
             attrs.pop(k)
 
-        new_class = super_new(cls, name, bases, attrs)
+        new_class = super_new(mcs, name, bases, attrs)
         new_class._fields = dict(getattr(new_class, '_fields', {}), **new_fields)
+        new_class._refs = refs
+
         return new_class
 
 
@@ -58,18 +65,20 @@ class Collection(CollectionBase):
     _safe_list = [
         '__collection__', '_safe_list', '_relations', '_id', '_index',
         '_collection_config', '_post_process', '_pre_process', '_fields_info',
-        '_fields'
+        '_fields', '_db', '_refs', '_refs_vals'
     ]
 
     def __init__(self, collection_name=None, **kwargs):
         if collection_name is not None:
             self.__collection__ = collection_name
 
+        self._refs_vals = {}  # initialize container for relationship and graph_relationship values
+
         # cls._Schema().load(in_dict)
         if '_key' not in kwargs:
             self._key = None
 
-        for field_name, field in self._fields.items():
+        for field_name, field in self._fields.items():  # pylint: disable=E1101
             default_value = None if field.default is missing else field.default
             setattr(self, field_name, kwargs.pop(field_name, default_value))
 
@@ -89,6 +98,49 @@ class Collection(CollectionBase):
 
     def __repr__(self):
         return self.__str__()
+
+    def __getattribute__(self, item):
+
+        # print("__getatttribute__ called!")
+        if item not in super().__getattribute__('_refs'):  # pylint: disable=E1101
+            return super().__getattribute__(item)  # pylint: disable=E1101
+
+        if item not in super().__getattribute__('_refs_vals'):  # pylint: disable=E1101
+
+            # print("trying to load ref val")
+            # pdb.set_trace()
+            if (hasattr(self, '_db') is False or
+                    super().__getattribute__('_db') is None):  # pylint: disable=E1101
+                raise DetachedInstanceError()
+
+            db = super().__getattribute__('_db')  # pylint: disable=E1101
+            ref_class = super().__getattribute__('_refs')[item]  # pylint: disable=E1101
+
+            if '_key' == ref_class.target_field:
+                val = db.query(ref_class.col_class).by_key(
+                    super().__getattribute__(ref_class.field))  # pylint: disable=E1101
+
+                if ref_class.uselist is True:
+                    val = [val, ]
+
+                super().__getattribute__('_refs_vals')[item] = val  # pylint: disable=E1101
+
+            else:
+                if ref_class.uselist is False:
+                    super().__getattribute__('_refs_vals')[item] = db.query(  # pylint: disable=E1101
+                        ref_class.col_class).filter(
+                            ref_class.target_field + "==@val",
+                            val=super().__getattribute__(ref_class.field)  # pylint: disable=E1101
+                        ).first()
+                else:
+                    # TODO: Handle ref_class.order_by if present
+                    super().__getattribute__('_refs_vals')[item] = db.query(  # pylint: disable=E1101
+                        ref_class.col_class).filter(
+                            ref_class.target_field + "==@val",
+                            val=super().__getattribute__(ref_class.field)  # pylint: disable=E1101
+                        ).all()
+
+        return super().__getattribute__('_refs_vals')[item]  # pylint: disable=E1101
 
     @classmethod
     def _load(cls, in_dict, instance=None, db=None):
@@ -118,7 +170,9 @@ class Collection(CollectionBase):
             new_obj._pre_process()
 
         for k, v in data.items():
-            if k in cls._safe_list or (k in dir(cls) and callable(getattr(cls, k))):
+            if (k in cls._safe_list or k in cls._refs or  # pylint: disable=E1101
+                    (k in dir(cls) and callable(getattr(cls, k)))):
+
                 raise MemberExistsException(
                     "{} is already a member of {} instance and cannot be overwritten".format(
                         k, cls.__name__))
@@ -160,7 +214,10 @@ class Collection(CollectionBase):
         if self._allow_extra_fields:
             for prop in dir(self):
                 if hasattr(self.__class__, prop) and \
-                    isinstance(getattr(self.__class__, prop), property):
+                    isinstance(
+                            getattr(self.__class__, prop),
+                            (property, Relationship, GraphRelationship)
+                        ):
 
                     continue
 
@@ -183,7 +240,8 @@ class Relation(Collection):
 
     _safe_list = [
         '__collection__', '_safe_list', '_id', '_collections_from', '_collections_to',
-        '_object_from', '_object_to', '_index', '_collection_config', '_fields'
+        '_object_from', '_object_to', '_index', '_collection_config', '_fields', '_db',
+        '_refs', '_refs_vals'
     ]
 
     def __init__(self, collection_name=None, **kwargs):
