@@ -1,3 +1,4 @@
+from datetime import datetime
 from arango_orm.fields import String, Date, Integer, Boolean
 from arango_orm import Collection, Relation, Graph, GraphConnection
 from arango_orm.references import relationship, graph_relationship
@@ -26,7 +27,7 @@ class Person(Collection):
     dob = Date()
     is_staff = Boolean(default=False)
 
-    cars = relationship("Car", '_key', target_field='owner_id')
+    cars = relationship(__name__ + ".Car", '_key', target_field='owner_id')
 
     @property
     def is_adult(self):
@@ -55,14 +56,18 @@ class Car(Collection):
     def __str__(self):
         return "<Car({} - {} - {})>".format(self.make, self.model, self.year)
 
+persons = [
+    Person(_key='kashif', name='Kashif Iftikhar', dob=datetime.today()),
+    Person(_key='azeen', name='Azeen Kashif', dob=datetime.today())
+]
 cars = [
-    Car(make="Honda", model="Civic", year=1984),
-    Car(make="Honda", model="Civic", year=1995),
-    Car(make="Honda", model="Civic", year=1998),
-    Car(make="Honda", model="Civic", year=2001),
-    Car(make="Toyota", model="Corolla", year=1988),
-    Car(make="Toyota", model="Corolla", year=2004),
-    Car(make="Mitsubishi", model="Lancer", year=2005)
+    Car(make="Honda", model="Civic", year=1984, owner_id='kashif'),
+    Car(make="Honda", model="Civic", year=1995, owner_id='kashif'),
+    Car(make="Honda", model="Civic", year=1998, owner_id='Azeen'),
+    Car(make="Honda", model="Civic", year=2001, owner_id='Azeen'),
+    Car(make="Toyota", model="Corolla", year=1988, owner_id='kashif'),
+    Car(make="Toyota", model="Corolla", year=2004, owner_id='Azeen'),
+    Car(make="Mitsubishi", model="Lancer", year=2005, owner_id='Azeen')
 ]
 
 
