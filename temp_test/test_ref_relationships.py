@@ -30,7 +30,7 @@ class Person(Collection):
     dob = Date()
     is_staff = Boolean(default=False)
 
-    cars = relationship(__name__ + ".Car", '_key', target_field='owner_id')
+    cars = relationship(__name__ + ".Car", '_key', target_field='owner_key')
 
     @property
     def is_adult(self):
@@ -52,9 +52,9 @@ class Car(Collection):
     make = String(required=True)
     model = String(required=True)
     year = Integer(required=True)
-    owner_id = String()
+    owner_key = String()
 
-    owner = relationship(Person, 'owner_id')
+    owner = relationship(Person, 'owner_key', cache=False)
 
     def __str__(self):
         return "<Car({} - {} - {})>".format(self.make, self.model, self.year)
@@ -69,13 +69,13 @@ db.add(p)
 p2 = Person(_key='azeen', name='Azeen Kashif', dob=datetime.today())
 db.add(p2)
 
-c1 = Car(make='Honda', model='Civic', year=1984, owner_id='kashif')
+c1 = Car(make='Honda', model='Civic', year=1984, owner_key='kashif')
 db.add(c1)
 
-c2 = Car(make='Mitsubishi', model='Lancer', year=2005, owner_id='kashif')
+c2 = Car(make='Mitsubishi', model='Lancer', year=2005, owner_key='kashif')
 db.add(c2)
 
-c3 = Car(make='Acme', model='Toy Racer', year=2016, owner_id='azeen')
+c3 = Car(make='Acme', model='Toy Racer', year=2016, owner_key='azeen')
 db.add(c3)
 
 

@@ -4,7 +4,10 @@ from __future__ import (absolute_import, division, print_function,
 from datetime import date
 from arango_orm.event import dispatch, listen, listens_for
 from arango_orm import Collection
-from mock import create_autospec, Mock
+try:
+    from unittest.mock import create_autospec, Mock
+except ImportError:
+    from mock import create_autospec, Mock
 
 from . import TestBase
 from .data import Person
@@ -55,7 +58,7 @@ class TestCollection(TestBase):
         p = MyPerson('James')
         p.sleep()
 
-        mock.assert_called_once()
+        mock.assert_called_once()  # only available in python 3.6 for builtin unittest.mock
 
     def test_listens_for_decorator(self):
         mock = Mock()
@@ -66,7 +69,7 @@ class TestCollection(TestBase):
 
         p = MyPerson('Wonder')
         p.sleep()
-        mock.assert_called_once()
+        mock.assert_called_once()  # only available in python 3.6 for builtin unittest.mock
 
     def test_orm_events(self):
         ma, mu, md = Mock(), Mock(), Mock()

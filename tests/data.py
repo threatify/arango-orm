@@ -19,7 +19,7 @@ class Person(Collection):
     dob = Date()
     is_staff = Boolean(default=False)
 
-    cars = relationship(__name__ + ".Car", '_key', target_field='owner_id')
+    cars = relationship(__name__ + ".Car", '_key', target_field='owner_key')
 
     @property
     def is_adult(self):
@@ -41,9 +41,9 @@ class Car(Collection):
     make = String(required=True)
     model = String(required=True)
     year = Integer(required=True)
-    owner_id = String()
+    owner_key = String()
 
-    owner = relationship(Person, 'owner_id')
+    owner = relationship(Person, 'owner_key')
 
     def __str__(self):
         return "<Car({} - {} - {})>".format(self.make, self.model, self.year)
@@ -53,13 +53,13 @@ persons = [
     Person(_key='azeen', name='Azeen Kashif', dob=datetime.today())
 ]
 cars = [
-    Car(make="Honda", model="Civic", year=1984, owner_id='kashif'),
-    Car(make="Honda", model="Civic", year=1995, owner_id='kashif'),
-    Car(make="Honda", model="Civic", year=1998, owner_id='Azeen'),
-    Car(make="Honda", model="Civic", year=2001, owner_id='Azeen'),
-    Car(make="Toyota", model="Corolla", year=1988, owner_id='kashif'),
-    Car(make="Toyota", model="Corolla", year=2004, owner_id='Azeen'),
-    Car(make="Mitsubishi", model="Lancer", year=2005, owner_id='Azeen')
+    Car(make="Honda", model="Civic", year=1984, owner_key='kashif'),
+    Car(make="Honda", model="Civic", year=1995, owner_key='kashif'),
+    Car(make="Honda", model="Civic", year=1998, owner_key='Azeen'),
+    Car(make="Honda", model="Civic", year=2001, owner_key='Azeen'),
+    Car(make="Toyota", model="Corolla", year=1988, owner_key='kashif'),
+    Car(make="Toyota", model="Corolla", year=2004, owner_key='Azeen'),
+    Car(make="Mitsubishi", model="Lancer", year=2005, owner_key='Azeen')
 ]
 
 

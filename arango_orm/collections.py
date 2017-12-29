@@ -118,29 +118,32 @@ class Collection(CollectionBase):
             db = super().__getattribute__('_db')  # pylint: disable=E1101
             ref_class = super().__getattribute__('_refs')[item]  # pylint: disable=E1101
 
+            r_val = None
             if '_key' == ref_class.target_field:
-                val = db.query(ref_class.col_class).by_key(
+                r_val = db.query(ref_class.col_class).by_key(
                     super().__getattribute__(ref_class.field))  # pylint: disable=E1101
 
                 if ref_class.uselist is True:
-                    val = [val, ]
-
-                super().__getattribute__('_refs_vals')[item] = val  # pylint: disable=E1101
+                    r_val = [r_val, ]
 
             else:
                 if ref_class.uselist is False:
-                    super().__getattribute__('_refs_vals')[item] = db.query(  # pylint: disable=E1101
-                        ref_class.col_class).filter(
-                            ref_class.target_field + "==@val",
-                            val=super().__getattribute__(ref_class.field)  # pylint: disable=E1101
+                    r_val = db.query(ref_class.col_class).filter(
+                        ref_class.target_field + "==@val",
+                        val=super().__getattribute__(ref_class.field)  # pylint: disable=E1101
                         ).first()
+
                 else:
                     # TODO: Handle ref_class.order_by if present
-                    super().__getattribute__('_refs_vals')[item] = db.query(  # pylint: disable=E1101
-                        ref_class.col_class).filter(
-                            ref_class.target_field + "==@val",
-                            val=super().__getattribute__(ref_class.field)  # pylint: disable=E1101
+                    r_val = db.query(ref_class.col_class).filter(
+                        ref_class.target_field + "==@val",
+                        val=super().__getattribute__(ref_class.field)  # pylint: disable=E1101
                         ).all()
+
+            if ref_class.cache is True:
+                super().__getattribute__('_refs_vals')[item] = r_val  # pylint: disable=E1101
+            else:
+                return r_val
 
         return super().__getattribute__('_refs_vals')[item]  # pylint: disable=E1101
 
