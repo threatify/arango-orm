@@ -235,7 +235,7 @@ These are similar in functionality to SQLAlchemy's relationship function.
         year = Integer(required=True)
         owner_key = String()
 
-        owner = relationship(Person, 'owner_key')
+        owner = relationship(Person, 'owner_key', cache=False)
     
         def __str__(self):
             return "<Car({} - {} - {})>".format(self.make, self.model, self.year)
