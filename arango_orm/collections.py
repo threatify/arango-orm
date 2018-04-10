@@ -72,6 +72,7 @@ class Collection(CollectionBase):
         if collection_name is not None:
             self.__collection__ = collection_name
 
+        self._dirty = set()
         self._refs_vals = {}  # initialize container for relationship and graph_relationship values
 
         # cls._Schema().load(in_dict)
@@ -87,6 +88,14 @@ class Collection(CollectionBase):
         # FIXME: shall we ignore attrs not defined in schema
         for k, v in kwargs.items():
             setattr(self, k, v)
+
+    def __setattr__(self, attr, value):
+        super(Collection, self).__setattr__(attr, value)
+
+        if attr not in self._fields:
+            return
+
+        self._dirty.add(attr)
 
     def __str__(self):
         ret = "<" + self.__class__.__name__
@@ -197,6 +206,9 @@ class Collection(CollectionBase):
         if hasattr(new_obj, '_post_process'):
             new_obj._post_process()
 
+        if db is not None:
+            # no dirty fields if initializing an object from db
+            new_obj._dirty.clear()
         return new_obj
 
     def _dump(self, **kwargs):
@@ -250,6 +262,8 @@ class Relation(Collection):
     ]
 
     def __init__(self, collection_name=None, **kwargs):
+
+        self._dirty = set()
 
         if '_collections_from' in kwargs:
             self._collections_from = kwargs['_collections_from']

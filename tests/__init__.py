@@ -62,3 +62,8 @@ class TestBase(unittest.TestCase):
                 raise exp_to_raise
 
         return True
+
+    def assert_has_same_items(self, left, right, exp_to_raise=AssertionError):
+        if not set(left) == set(right):
+            raise exp_to_raise
+        return True

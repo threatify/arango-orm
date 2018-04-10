@@ -80,6 +80,7 @@ class Database(ArangoDatabase):
         res = collection.insert(entity._dump())
         if not getattr(entity, '_key', None) and '_key' in res:
             setattr(entity, '_key', res['_key'])
+        entity._dirty.clear()
 
         dispatch(entity, 'post_add', db=self, result=res)
         return res
@@ -94,13 +95,21 @@ class Database(ArangoDatabase):
         dispatch(entity, 'post_delete', db=self, result=res)
         return res
 
-    def update(self, entity, **kwargs):
+    def update(self, entity, only_dirty=False, **kwargs):
         "Update given document"
+        collection = self._db.collection(entity.__collection__)
+        data = entity._dump()
+
+        if only_dirty:
+            if not entity._dirty:
+                return entity
+            data = {k: v for k, v in data.items() if k == '_key' or k in entity._dirty}
+
         dispatch(entity, 'pre_update', db=self)
 
-        collection = self._db.collection(entity.__collection__)
         setattr(entity, '_db', self)
-        res = collection.update(entity._dump(), **kwargs)
+        res = collection.update(data, **kwargs)
+        entity._dirty.clear()
 
         dispatch(entity, 'post_update', db=self, result=res)
         return res
