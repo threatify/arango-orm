@@ -104,24 +104,24 @@ class Collection(CollectionBase):
     def __getattribute__(self, item):
 
         # print("__getatttribute__ called!")
-        if item not in super().__getattribute__('_refs'):  # pylint: disable=E1101
-            return super().__getattribute__(item)  # pylint: disable=E1101
+        if item not in super(Collection, self).__getattribute__('_refs'):  # pylint: disable=E1101
+            return super(Collection, self).__getattribute__(item)  # pylint: disable=E1101
 
-        if item not in super().__getattribute__('_refs_vals'):  # pylint: disable=E1101
+        if item not in super(Collection, self).__getattribute__('_refs_vals'):  # pylint: disable=E1101
 
             # print("trying to load ref val")
             # pdb.set_trace()
             if (hasattr(self, '_db') is False or
-                    super().__getattribute__('_db') is None):  # pylint: disable=E1101
+                    super(Collection, self).__getattribute__('_db') is None):  # pylint: disable=E1101
                 raise DetachedInstanceError()
 
-            db = super().__getattribute__('_db')  # pylint: disable=E1101
-            ref_class = super().__getattribute__('_refs')[item]  # pylint: disable=E1101
+            db = super(Collection, self).__getattribute__('_db')  # pylint: disable=E1101
+            ref_class = super(Collection, self).__getattribute__('_refs')[item]  # pylint: disable=E1101
 
             r_val = None
             if '_key' == ref_class.target_field:
                 r_val = db.query(ref_class.col_class).by_key(
-                    super().__getattribute__(ref_class.field))  # pylint: disable=E1101
+                    super(Collection, self).__getattribute__(ref_class.field))  # pylint: disable=E1101
 
                 if ref_class.uselist is True:
                     r_val = [r_val, ]
@@ -130,22 +130,22 @@ class Collection(CollectionBase):
                 if ref_class.uselist is False:
                     r_val = db.query(ref_class.col_class).filter(
                         ref_class.target_field + "==@val",
-                        val=super().__getattribute__(ref_class.field)  # pylint: disable=E1101
+                        val=super(Collection, self).__getattribute__(ref_class.field)  # pylint: disable=E1101
                         ).first()
 
                 else:
                     # TODO: Handle ref_class.order_by if present
                     r_val = db.query(ref_class.col_class).filter(
                         ref_class.target_field + "==@val",
-                        val=super().__getattribute__(ref_class.field)  # pylint: disable=E1101
+                        val=super(Collection, self).__getattribute__(ref_class.field)  # pylint: disable=E1101
                         ).all()
 
             if ref_class.cache is True:
-                super().__getattribute__('_refs_vals')[item] = r_val  # pylint: disable=E1101
+                super(Collection, self).__getattribute__('_refs_vals')[item] = r_val  # pylint: disable=E1101
             else:
                 return r_val
 
-        return super().__getattribute__('_refs_vals')[item]  # pylint: disable=E1101
+        return super(Collection, self).__getattribute__('_refs_vals')[item]  # pylint: disable=E1101
 
     @classmethod
     def _load(cls, in_dict, instance=None, db=None):
