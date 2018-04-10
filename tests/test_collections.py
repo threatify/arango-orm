@@ -125,3 +125,13 @@ class TestCollection(TestBase):
         assert p.name == 'test'
         assert np.name == 'Wonder'
         assert np._key == '12312'
+
+    def test_10_dirty_fields(self):
+        p1 = Person(name='test', _key='12312', dob=date(year=2016, month=9, day=12))
+        p2 = Person._load({'_key': '37405-4564665-7', 'dob': '2016-09-12', 'name': 'Kashif Iftikhar'})
+        self.assert_has_same_items(p1._dirty, ['name', '_key', 'dob', 'age', 'is_staff'])
+        self.assert_has_same_items(p2._dirty, ['name', '_key', 'dob', 'age', 'is_staff'])
+
+        p1._dirty.clear()
+        p1.name = 'test'  # change name, even if the same as before!
+        self.assert_has_same_items(p1._dirty, ['name'])
