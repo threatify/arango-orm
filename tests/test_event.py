@@ -1,12 +1,14 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+import sys
 from datetime import date
 from arango_orm.event import dispatch, listen, listens_for
 from arango_orm import Collection
-try:
+if sys.version >= '3.6':
+    # Since assert_called_once is wew in version 3.6
     from unittest.mock import create_autospec, Mock
-except ImportError:
+else:
     from mock import create_autospec, Mock
 
 from . import TestBase

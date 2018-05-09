@@ -252,3 +252,52 @@ class TestDatabase(TestBase):
         p = db.query(Person).by_key("12312")
 
         assert p.is_staff is False  # not None
+
+    def test_18_nodirty_from_db(self):
+        db = self._get_db_obj()
+
+        p = db.query(Person).by_key("12312")
+        assert not p._dirty
+
+        p.name = 'Anonymous'
+        self.assert_has_same_items(p._dirty, {'name'})
+
+    def test_19_nodirty_after_save(self):
+        db = self._get_db_obj()
+
+        p = db.query(Person).by_key("12312")
+        p.name = 'NB'
+        self.assert_has_same_items(p._dirty, {'name'})
+        db.update(p)
+        assert not p._dirty
+
+        new_p = Person(name='test1', dob=date(year=2016, month=9, day=12))
+        assert len(new_p._dirty)
+        db.add(new_p)
+        assert not new_p._dirty
+
+    def test_20_only_save_dirty_fields(self):
+        db = self._get_db_obj()
+
+        # We keep two references of the same record from db
+        p_ref1 = db.query(Person).by_key("12312")
+        p_ref2 = db.query(Person).by_key("12312")
+
+        # First, let's watch the normal behavior
+        p_ref1.name = 'NB-1'
+        db.update(p_ref1)   # stmt1
+        db.update(p_ref2)   # stmt2
+
+        # stmt2 updated the record with an old value, overrode stmt1's result
+        fresh = db.query(Person).by_key("12312")
+        assert fresh.name == 'NB'
+
+        # Then, let's do update of only dirty fields
+        p_ref1.name = 'NB-1'
+        p_ref1.age = 98
+        p_ref2.age = 99
+        db.update(p_ref1)
+        db.update(p_ref2, only_dirty=True)
+        fresh = db.query(Person).by_key("12312")
+        assert fresh.name == 'NB-1'
+        assert fresh.age == 99
