@@ -2,8 +2,8 @@ from setuptools import setup, find_packages
 
 requires = [
     'six',
-    'python-arango==3.11.0',
-    'marshmallow==2.10.0'
+    'python-arango~=3.11.0',
+    'marshmallow~=2.10.0'
 ]
 
 setup(
