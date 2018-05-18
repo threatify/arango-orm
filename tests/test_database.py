@@ -16,12 +16,14 @@ class TestDatabase(TestBase):
     @classmethod
     def setUpClass(cls):
         db = cls._get_db_obj()
-        db.create_collection(Person)
+        if not db.collection_exists(Person):
+            db.create_collection(Person)
 
     @classmethod
     def tearDownClass(cls):
         db = cls._get_db_obj()
-        db.drop_collection(Person)
+        if db.collection_exists(Person):
+            db.drop_collection(Person)
 
     def test_01_database_object_creation(self):
 

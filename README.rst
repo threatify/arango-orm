@@ -59,6 +59,13 @@ __________________
 
     db.drop_collection(Student)
 
+Check if a collection exists
+____________________________
+
+.. code-block:: python
+
+    db.collection_exists(Student)
+    db.collection_exists('students')
 
 Add Records
 ___________
@@ -560,6 +567,11 @@ same structure as graph.expand method:
 
 CHANGES
 =======
+
+Version 0.4
+-----------
+
+- Database.collection_exists method.
 
 Version 0.3.1
 -------------

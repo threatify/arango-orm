@@ -35,6 +35,22 @@ class Database(ArangoDatabase):
 
         assert col.__collection__ is not None
 
+    def collection_exists(self, collection):
+        "Confirm that the given collection class or collection name exists in the db"
+
+        collection_name = None
+
+        if isclass(collection) and hasattr(collection, '__collection__'):
+            collection_name = collection.__collection__
+
+        elif isinstance(collection, str):
+            collection_name = collection
+
+        assert collection_name is not None
+        db_col_names = [d['name'] for d in self._db.collections()]
+
+        return collection_name in db_col_names
+
     def create_collection(self, collection, **col_args):
         "Create a collection"
 

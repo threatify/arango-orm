@@ -1,5 +1,6 @@
 "Test cases for the :module:`arango_orm.database`"
 
+import logging
 from datetime import date
 from . import TestBase
 from .data import Person, Car, cars
@@ -10,20 +11,29 @@ from arango_orm.database import Database
 from arango_orm.collections import Collection
 from arango_orm.query import Query
 
+log = logging.getLogger(__name__)
+
 
 class TestQuery(TestBase):
 
     @classmethod
     def setUpClass(cls):
         db = cls._get_db_obj()
-        db.create_collection(Person)
-        db.create_collection(Car)
+        if not db.collection_exists(Person):
+            db.create_collection(Person)
+
+        if not db.collection_exists(Car):
+            db.create_collection(Car)
 
     @classmethod
     def tearDownClass(cls):
         db = cls._get_db_obj()
-        db.drop_collection(Person)
-        db.drop_collection(Car)
+        
+        if db.collection_exists(Person):
+            db.drop_collection(Person)
+
+        if db.collection_exists(Car):
+            db.drop_collection(Car)
 
     def _populate_cars(self):
         db = self._get_db_obj()
@@ -69,6 +79,7 @@ class TestQuery(TestBase):
         db = self._get_db_obj()
 
         results = db.query(Car).filter("year==2005").all()
+        log.debug(results)
 
         assert 1 == len(results) 
         assert "Mitsubishi" == results[0].make
