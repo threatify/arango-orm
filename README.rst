@@ -19,8 +19,8 @@ Connecting to a Database
     from arango import ArangoClient
     from arango_orm import Database
     
-    client = ArangoClient(username='test', password='test')
-    test_db = client.db('test')
+    client = ArangoClient(protocol='http', host='localhost', port=8529)
+    test_db = client.db('test', username='test', password='test')
     
     db = Database(test_db)
 
@@ -64,8 +64,8 @@ ____________________________
 
 .. code-block:: python
 
-    db.collection_exists(Student)
-    db.collection_exists('students')
+    db.has_collection(Student)
+    db.has_collection('students')
 
 Add Records
 ___________
@@ -571,7 +571,7 @@ CHANGES
 Version 0.4
 -----------
 
-- Database.collection_exists method.
+- Database.has_collection method.
 
 Version 0.3.1
 -------------

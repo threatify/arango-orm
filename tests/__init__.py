@@ -16,13 +16,13 @@ class TestBase(unittest.TestCase):
     @classmethod
     def get_client(cls):
         if cls.client is None:
-            cls.client = ArangoClient(username='test', password='test')
+            cls.client = ArangoClient()
 
         return cls.client
 
     @classmethod
     def get_db(cls):
-        return cls.get_client().db('test')
+        return cls.get_client().db('test', username='test', password='test')
 
     @classmethod
     def _get_db_obj(cls):

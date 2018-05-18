@@ -5,7 +5,8 @@ import logging
 from copy import deepcopy
 from inspect import isclass
 
-from arango.database import Database as ArangoDatabase
+from arango.database import StandardDatabase as ArangoDatabase
+# from arango.executor import DefaultExecutor
 from .collections import CollectionBase, Collection
 from .query import Query
 from .event import dispatch
@@ -23,6 +24,10 @@ class Database(ArangoDatabase):
 
         self._db = db
         super(Database, self).__init__(db._conn)
+#         super(Database, self).__init__(
+#             connection=connection,
+#             executor=DefaultExecutor(connection)
+# )
 
     def _verify_collection(self, col):
         "Verifies that col is a collection class or object of a collection class"
@@ -35,7 +40,7 @@ class Database(ArangoDatabase):
 
         assert col.__collection__ is not None
 
-    def collection_exists(self, collection):
+    def has_collection(self, collection):
         "Confirm that the given collection class or collection name exists in the db"
 
         collection_name = None
@@ -47,9 +52,8 @@ class Database(ArangoDatabase):
             collection_name = collection
 
         assert collection_name is not None
-        db_col_names = [d['name'] for d in self._db.collections()]
 
-        return collection_name in db_col_names
+        return self._db.has_collection(collection_name)
 
     def create_collection(self, collection, **col_args):
         "Create a collection"
@@ -59,7 +63,8 @@ class Database(ArangoDatabase):
         if hasattr(collection, '_collection_config'):
             col_args.update(collection._collection_config)
 
-        col = super(Database, self).create_collection(name=collection.__collection__, **col_args)
+        col = super(Database, self).create_collection(
+            name=collection.__collection__, **col_args)
 
         if hasattr(collection, '_index'):
             for index in collection._index:
@@ -190,9 +195,9 @@ class Database(ArangoDatabase):
             to_col_names = [col.__collection__ for col in cols_to]
 
             graph_edge_definitions.append({
-                'name': relation_obj.__collection__,
-                'from_collections': from_col_names,
-                'to_collections': to_col_names
+                'edge_collection': relation_obj.__collection__,
+                'from_vertex_collections': from_col_names,
+                'to_vertex_collections': to_col_names
             })
 
         self._db.create_graph(graph_object.__graph__, graph_edge_definitions)
@@ -250,7 +255,7 @@ class Database(ArangoDatabase):
                 log.warning("Error creating edge collection %s, it probably already exists",
                             rel_obj.__collection__)
 
-        existing_edges = dict([(e['name'], e) for e in graph_object._graph.edge_definitions()])
+        existing_edges = dict([(e['edge_collection'], e) for e in graph_object._graph.edge_definitions()])
 
         for _, relation_obj in graph_object.edges.items():
 
@@ -271,22 +276,22 @@ class Database(ArangoDatabase):
             to_col_names = [col.__collection__ for col in cols_to]
 
             edge_definition = {
-                'name': relation_obj.__collection__,
-                'from_collections': from_col_names,
-                'to_collections': to_col_names
+                'edge_collection': relation_obj.__collection__,
+                'from_vertex_collections': from_col_names,
+                'to_vertex_collections': to_col_names
             }
 
             # if edge does not already exist, create it
-            if edge_definition['name'] not in existing_edges:
+            if edge_definition['edge_collection'] not in existing_edges:
                 log.info("  + creating graph edge definition: %r", edge_definition)
                 graph_object._graph.create_edge_definition(**edge_definition)
             else:
                 # if edge definition exists, see if it needs updating
                 # compare edges
-                if not self._is_same_edge(edge_definition, existing_edges[edge_definition['name']]):
+                if not self._is_same_edge(edge_definition, existing_edges[edge_definition['edge_collection']]):
                     # replace_edge_definition
                     log.info("  graph edge definition modified, updating:\n new: %r\n old: %r",
-                             edge_definition, existing_edges[edge_definition['name']])
+                             edge_definition, existing_edges[edge_definition['edge_collection']])
                     graph_object._graph.replace_edge_definition(**edge_definition)
 
         # Remove any edge definitions that are present in DB but not in graph definition
@@ -308,21 +313,21 @@ class Database(ArangoDatabase):
         """
 
         # {'name': 'dns_info', 'to_collections': ['domains'], 'from_collections': ['dns_records']}
-        assert e1['name'] == e2['name']
+        assert e1['edge_collection'] == e2['edge_collection']
 
-        if len(e1['to_collections']) != len(e2['to_collections']) or \
-                len(e1['from_collections']) != len(e2['from_collections']):
+        if len(e1['to_vertex_collections']) != len(e2['to_vertex_collections']) or \
+                len(e1['from_vertex_collections']) != len(e2['from_vertex_collections']):
 
             return False
 
         else:
             # if same length compare values
-            for cname in e1['to_collections']:
-                if cname not in e2['to_collections']:
+            for cname in e1['to_vertex_collections']:
+                if cname not in e2['to_vertex_collections']:
                     return False
 
-            for cname in e1['from_collections']:
-                if cname not in e2['from_collections']:
+            for cname in e1['from_vertex_collections']:
+                if cname not in e2['from_vertex_collections']:
                     return False
 
         return True
