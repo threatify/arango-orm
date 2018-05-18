@@ -1,7 +1,8 @@
 "Test cases for the :module:`arango_orm.database`"
 
+import logging
 from datetime import date
-from arango.collections.base import CollectionStatisticsError
+from arango.exceptions import CollectionStatisticsError
 from arango_orm.database import Database
 from arango_orm.graph import GraphConnection
 from arango_orm.collections import Collection
@@ -10,19 +11,21 @@ from . import TestBase
 from .data import (Person, UniversityGraph, Student, Teacher, Subject, SpecializesIn, Area,
                    DummyFromCol1, DummyFromCol2, DummyRelation, DummyToCol1, DummyToCol2)
 
+log = logging.getLogger(__name__)
+
 
 class TestDatabase(TestBase):
 
     @classmethod
     def setUpClass(cls):
         db = cls._get_db_obj()
-        if not db.collection_exists(Person):
+        if not db.has_collection(Person):
             db.create_collection(Person)
 
     @classmethod
     def tearDownClass(cls):
         db = cls._get_db_obj()
-        if db.collection_exists(Person):
+        if db.has_collection(Person):
             db.drop_collection(Person)
 
     def test_01_database_object_creation(self):
@@ -147,7 +150,9 @@ class TestDatabase(TestBase):
         assert DummyToCol2.__collection__ not in col_names
 
         gi = db.graphs()[0]
-        assert DummyRelation.__collection__ in [e['collection'] for e in gi['edge_definitions']]
+        log.debug(gi)
+
+        assert DummyRelation.__collection__ in [e['edge_collection'] for e in gi['edge_definitions']]
 
     def test_12_update_graph_update_connection(self):
 
@@ -169,7 +174,7 @@ class TestDatabase(TestBase):
         assert DummyRelation.__collection__ in col_names
 
         gi = db.graphs()[0]
-        assert DummyRelation.__collection__ in [e['collection'] for e in gi['edge_definitions']]
+        assert DummyRelation.__collection__ in [e['edge_collection'] for e in gi['edge_definitions']]
 
     def test_13_update_graph_remove_connection(self):
 
@@ -191,7 +196,7 @@ class TestDatabase(TestBase):
         assert DummyRelation.__collection__ in col_names
 
         gi = db.graphs()[0]
-        assert DummyRelation.__collection__ not in [e['collection'] for e in gi['edge_definitions']]
+        assert DummyRelation.__collection__ not in [e['edge_collection'] for e in gi['edge_definitions']]
 
     def test_14_drop_graph_without_collections(self):
         db, graph = self._get_graph()

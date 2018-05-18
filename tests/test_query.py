@@ -5,7 +5,7 @@ from datetime import date
 from . import TestBase
 from .data import Person, Car, cars
 from arango import ArangoClient
-from arango.collections.base import CollectionStatisticsError
+from arango.exceptions import CollectionStatisticsError
 
 from arango_orm.database import Database
 from arango_orm.collections import Collection
@@ -19,20 +19,20 @@ class TestQuery(TestBase):
     @classmethod
     def setUpClass(cls):
         db = cls._get_db_obj()
-        if not db.collection_exists(Person):
+        if not db.has_collection(Person):
             db.create_collection(Person)
 
-        if not db.collection_exists(Car):
+        if not db.has_collection(Car):
             db.create_collection(Car)
 
     @classmethod
     def tearDownClass(cls):
         db = cls._get_db_obj()
         
-        if db.collection_exists(Person):
+        if db.has_collection(Person):
             db.drop_collection(Person)
 
-        if db.collection_exists(Car):
+        if db.has_collection(Car):
             db.drop_collection(Car)
 
     def _populate_cars(self):
