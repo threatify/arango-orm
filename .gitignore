@@ -93,3 +93,5 @@ ENV/
 
 # ctags
 tags
+.tags
+.tags1
