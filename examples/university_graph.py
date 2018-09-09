@@ -192,17 +192,8 @@ delete_database - delete test database
     username = 'root'
     password = ''
 
-    client = ArangoClient(username=username, password=password, verify=True)
-
-    # try:
-    #     client.delete_database(name=db_name)
-    # except:
-    #     pass
-
-    try:
-        test_db = client.create_database(name=db_name)
-    except:
-        test_db = client.db(db_name)
+    client = ArangoClient()
+    test_db = client.db(db_name, username=username, password=password)
 
     db = Database(test_db)
 

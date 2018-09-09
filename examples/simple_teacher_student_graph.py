@@ -29,8 +29,8 @@ class UniversityGraph(Graph):
     ]
 
 
-client = ArangoClient(username='test', password='test')
-test_db = client.db('test')
+client = ArangoClient()
+test_db = client.db('test', username='test', password='test')
 db = Database(test_db)
 uni_graph = UniversityGraph(connection=db)
 

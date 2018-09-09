@@ -6,7 +6,8 @@ from marshmallow import (
 )
 
 from .references import Relationship, GraphRelationship
-from .exceptions import MemberExistsException, DetachedInstanceError
+from .exceptions import (
+    MemberExistsException, DetachedInstanceError, SerializationError)
 
 log = logging.getLogger(__name__)
 
@@ -164,7 +165,7 @@ class Collection(CollectionBase):
 
         data, errors = cls.schema().load(in_dict)
         if errors:
-            raise RuntimeError("Error loading object of collection {} - {}".format(
+            raise SerializationError("Error loading object of collection {} - {}".format(
                 cls.__name__, errors))
 
         # add any extra fields present in in_dict into data
@@ -218,7 +219,7 @@ class Collection(CollectionBase):
         data, errors = schema().dump(self)
 
         if errors:
-            raise RuntimeError("Error dumping object of collection {} - {}".format(
+            raise SerializationError("Error dumping object of collection {} - {}".format(
                 self.__class__.__name__, errors))
 
         if '_key' not in data and hasattr(self, '_key'):
@@ -305,7 +306,7 @@ class Relation(Collection):
 
         data, errors = cls.schema().load(in_dict)
         if errors:
-            raise RuntimeError("Error loading object of relation {} - {}".format(
+            raise SerializationError("Error loading object of relation {} - {}".format(
                 cls.__name__, errors))
 
         # add any extra fields present in in_dict into data
