@@ -5,8 +5,8 @@ from marshmallow import (
     Schema, fields, ValidationError, missing
 )
 
-from .references import Relationship, GraphRelationship
-from .exceptions import (
+from .references import Relationship, GraphRelationship  # pylint: disable=E0402
+from .exceptions import (  # pylint: disable=E0402
     MemberExistsException, DetachedInstanceError, SerializationError)
 
 log = logging.getLogger(__name__)
