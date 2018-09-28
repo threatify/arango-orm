@@ -202,6 +202,16 @@ class TestQuery(TestBase):
         assert "Toyota" == records[1].make
         assert "Corolla" == records[1].model
 
+    def test_13_01_fetch_partial_fields(self):
+
+        db = self._get_db_obj()
+
+        r0 = db.query(Car).limit(1).returns('make', 'model', 'year').all()[0]
+        r1 = db.query(Car).limit(1).returns('make', 'model', 'year').first()
+
+        assert r0.owner_key is None
+        assert r1.owner_key is None
+
     def test_14_update_filtered_records(self):
 
         db = self._get_db_obj()

@@ -158,12 +158,16 @@ class Collection(CollectionBase):
         return super(Collection, self).__getattribute__('_refs_vals')[item]  # pylint: disable=E1101
 
     @classmethod
-    def _load(cls, in_dict, instance=None, db=None):
+    def _load(cls, in_dict, only=None, instance=None, db=None):
         "Create object from given dict"
         if instance:
             in_dict = dict(instance._dump(), **in_dict)
 
-        data, errors = cls.schema().load(in_dict)
+        # save the instance's creation schema,
+        # so we can dump the instance with the orginal schema
+        schema = cls.schema(only=only)
+
+        data, errors = schema.load(in_dict)
         if errors:
             raise SerializationError("Error loading object of collection {} - {}".format(
                 cls.__name__, errors))
@@ -175,6 +179,7 @@ class Collection(CollectionBase):
                     data[k] = v
 
         new_obj = cls()
+        new_obj._instance_schema = schema
 
         if db:
             new_obj._db = db
@@ -212,11 +217,20 @@ class Collection(CollectionBase):
             new_obj._dirty.clear()
         return new_obj
 
-    def _dump(self, **kwargs):
+    def _dump(self, only=None, **kwargs):
         "Dump all object attributes into a dict"
+        schema = None
 
-        schema = self.schema
-        data, errors = schema().dump(self)
+        if hasattr(self, '_instance_schema'):
+            schema = self._instance_schema
+
+        if only is not None:
+            schema = self.schema(only=only)
+
+        if schema is None:
+            schema = self.schema()
+
+        data, errors = schema.dump(self)
 
         if errors:
             raise SerializationError("Error dumping object of collection {} - {}".format(

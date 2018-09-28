@@ -22,6 +22,7 @@ class Query(object):
         self._bind_vars = {'@collection': self._CollectionClass.__collection__}
         self._filter_conditions = []
         self._sort_columns = []
+        self._return_fields = None
         self._limit = None
         self._limit_start_record = 0
 
@@ -93,6 +94,17 @@ class Query(object):
         self._limit = num_records
         self._limit_start_record = start_from
 
+        return self
+
+    def returns(self, *fields):
+        CC = self._CollectionClass
+        self._return_fields = []
+        for f in fields:
+            if f not in CC._fields:
+                raise RuntimeError('field spec is denied: %s' % f)
+            fo = CC._fields[f]
+            fo.name = f
+            self._return_fields.append(fo)
         return self
 
     def _make_aql(self):
@@ -184,14 +196,20 @@ class Query(object):
 
         aql = self._make_aql()
 
-        aql += '\n RETURN rec'
+        if self._return_fields is not None:
+            aql += '\n RETURN {%s}' % ', '.join([
+                '{0}: rec.{0}'.format(f.load_from or f.name) for f in self._return_fields
+            ])
+        else:
+            aql += '\n RETURN rec'
         # print(aql)
 
         results = self._db.aql.execute(aql, bind_vars=self._bind_vars)
         ret = []
 
         for rec in results:
-            ret.append(self._CollectionClass._load(rec, db=self._db))
+            only = [f.name for f in self._return_fields] if self._return_fields else None
+            ret.append(self._CollectionClass._load(rec, only=only, db=self._db))
 
         return ret
 

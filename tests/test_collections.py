@@ -35,6 +35,14 @@ class TestCollection(TestBase):
         assert '12312' == d['_key']
         assert '2016-09-12' == d['dob']
 
+    def test_03_01_object_dump_only(self):
+
+        p = Person(name='test', _key='12312', dob=date(year=2016, month=9, day=12))
+        only_fields = ['_key', 'name']
+        d = p._dump(only=only_fields)
+
+        self.assert_has_same_items(only_fields, d.keys())
+
     def test_04_object_partial_fields_and_dump(self):
 
         p = Person(name='test', _key='12312')
