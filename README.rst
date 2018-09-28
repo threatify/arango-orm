@@ -170,6 +170,12 @@ ______________________
     page_num, per_page = 2, 10
     page = db.query(Student).sort("name DESC").limit(per_page, start_from=(page_num - 1) * per_page)
 
+Fetch Only Some Fields
+______________________
+
+    .. code-block:: python
+
+        c = db.query(Student).limit(2).returns('_key', 'name').first()
 
 Update Multiple Records
 _______________________
