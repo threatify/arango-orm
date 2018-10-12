@@ -16,8 +16,8 @@ log = logging.getLogger(__name__)
 
 class Database(ArangoDatabase):
     """
-    Serves similar to SQLAlchemy's session object with the exception that it also allows
-    creating and dropping collections etc.
+    Serves similar to SQLAlchemy's session object with the exception that it
+    also allows creating and dropping collections etc.
     """
 
     def __init__(self, db):
