@@ -29,10 +29,32 @@ Connecting to a Database
 
     db = Database(test_db)
 
+
+Using a Connection Pool
+-----------------------
+
+Connection pools allow using multiple connections for accessing the database.
+Though these can be used on a single machine setup, they are more useful to use
+with arango clusters.
+
+Connection pools support the same methods and properties that the Database class
+does. So they can be used interchangeably with Database.
+
+.. code-block:: python
+
+    from arango import ArangoClient
+    from arango_orm import ConnectionPool
+
+    client1 = ArangoClient(protocol='http', host='localhost', port=8529)
+    client2 = ArangoClient(protocol='http', host='127.0.0.1', port=8529)
+
+    db = ConnectionPool([client1, client2], 'test', 'test', 'test')
+
+
 Working With Collections
 -------------------------
 
-First we need to define data models (similar to SQLAlchemy's models) to specify what data our collection(s) will contain and how to marshall it
+First we need to define data models (similar to SQLAlchemy's models) to specify what data our collection(s) will contain and how to marshal it
 
 .. code-block:: python
 

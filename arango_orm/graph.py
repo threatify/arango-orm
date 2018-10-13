@@ -140,8 +140,9 @@ class Graph(object):
 
     def _objectify_results(self, results, doc_obj=None):
         """
-        Make traversal results object oriented by adding all links to the first object's _relations
-        attribute. If doc_obj is not provided, the first vertex of the first path is used.
+        Make traversal results object oriented by adding all links to the first
+        object's _relations attribute. If doc_obj is not provided, the first
+        vertex of the first path is used.
         """
 
         # Create objects from vertices dicts
