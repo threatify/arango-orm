@@ -6,6 +6,7 @@ from inspect import isclass
 
 from arango.database import Database as ArangoDatabase
 from .collections import CollectionBase
+from .exceptions import DocumentNotFoundError
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +45,10 @@ class Query(object):
 
         doc_dict = self._db.collection(self._CollectionClass.__collection__).get(key, **kwargs)
         if doc_dict is None:
-            return None
+            raise DocumentNotFoundError(
+                "(%s %r) not found" %
+                (self._CollectionClass.__collection__, key)
+            )
 
         return self._CollectionClass._load(doc_dict, db=self._db)
 

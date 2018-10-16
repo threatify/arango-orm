@@ -17,3 +17,9 @@ class SerializationError(Exception):
     """Instance is not linked with any database."""
 
     pass
+
+
+class DocumentNotFoundError(Exception):
+    """Document not found."""
+
+    pass

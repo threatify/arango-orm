@@ -111,8 +111,8 @@ class Graph(object):
 
     def relation(self, relation_from, relation, relation_to):
         """
-        Return relation (edge) object from given collection (relation_from and relation_to) and
-        edge/relation (relation) objects
+        Return relation (edge) object from given collection (relation_from and
+        relation_to) and edge/relation (relation) objects
         """
 
         relation._from = relation_from.__collection__ + '/' + relation_from._key
