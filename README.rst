@@ -601,6 +601,23 @@ same structure as graph.expand method:
 CHANGES
 =======
 
+Version 0.5.2
+-------------
+
+- _only parameter for collections
+
+Version 0.5.1
+-------------
+
+- Query.by_key raises DocumentNotFoundError if document does not exist
+
+Version 0.5
+-----------
+
+- Connection pool support.
+- Support fetching only partial fields while querying collections
+- Collections now raise SerializationError instead of RuntimeError when loading or dumping data to the db fails.
+
 Version 0.4
 -----------
 

@@ -73,7 +73,8 @@ class Graph(object):
     __graph__ = None
     graph_connections = None
 
-    def __init__(self, graph_name=None, graph_connections=None, connection=None):
+    def __init__(self,
+                 graph_name=None, graph_connections=None, connection=None):
 
         self.vertices = {}
         self.edges = {}
@@ -218,8 +219,9 @@ class Graph(object):
 
     def expand(self, doc_obj, direction='any', depth=1):
         """
-        Expand all links of given direction (outbound, inbound, any) upto given length for
-        the given document object and update the object with the found relations
+        Expand all links of given direction (outbound, inbound, any) upto given
+        length for the given document object and update the object with the
+        found relations
         """
 
         assert direction in ('any', 'inbound', 'outbound')
