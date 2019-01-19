@@ -601,6 +601,14 @@ same structure as graph.expand method:
 CHANGES
 =======
 
+Version 0.5.3
+-------------
+
+- bugfix #51 - _only parameter for relations
+- Updated examples/university_graph for easier creation and deletion of sample
+  graph with data and allowing server protocol, host, port, database, username
+  and password specification on the command line.
+
 Version 0.5.2
 -------------
 

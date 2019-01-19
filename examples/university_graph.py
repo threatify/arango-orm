@@ -1,75 +1,89 @@
+"""
+Sample data for testing.
+
+Contains sample collections and graph for checking out arango-orm.
+"""
+
 import sys
-from arango_orm.fields import List, String, UUID, Integer, Boolean, DateTime
-from marshmallow.validate import ContainsOnly, NoneOf, OneOf
-from marshmallow import (
-    Schema, pre_load, pre_dump, post_load, validates_schema,
-    validates, fields, ValidationError
-)
-
-from arango import ArangoClient
-from arango_orm.database import Database
-
-from arango_orm.collections import Collection, Relation
-from arango_orm.graph import Graph, GraphConnection
-
 from pprint import pprint as pp
 
+from arango import ArangoClient  # pylint: disable=E0401
+from arango_orm.fields import (  # pylint: disable=E0611
+    String, Integer, Boolean)
+from arango_orm.database import Database  # pylint: disable=E0401
+from arango_orm.collections import Collection, Relation  # pylint: disable=E
+from arango_orm.graph import Graph, GraphConnection  # pylint: disable=E0401
+
+
 class Student(Collection):
+    """Students collection."""
+
     __collection__ = 'students'
 
-    class _Schema(Schema):
-        _key = String(required=True)  # registration number
-        name = String(required=True, allow_none=False)
-        age = Integer()
+    _key = String(required=True)  # registration number
+    name = String(required=True, allow_none=False)
+    age = Integer()
 
     def __str__(self):
+        """Friendlier string representation."""
         return "<Student({},{})>".format(self._key, self.name)
 
 
 class Teacher(Collection):
+    """Teachers collection."""
+
     __collection__ = 'teachers'
 
-    class _Schema(Schema):
-        _key = String(required=True)  # employee id
-        name = String(required=True)
+    _key = String(required=True)  # employee id
+    name = String(required=True)
 
     def __str__(self):
+        """Friendlier string representation."""
         return "<Teacher({})>".format(self.name)
 
 
 class Subject(Collection):
+    """Subjects collection."""
+
     __collection__ = 'subjects'
 
-    class _Schema(Schema):
-        _key = String(required=True)  # subject code
-        name = String(required=True)
-        credit_hours = Integer()
-        has_labs = Boolean(missing=True)
+    _key = String(required=True)  # subject code
+    name = String(required=True)
+    credit_hours = Integer()
+    has_labs = Boolean(missing=True)
 
     def __str__(self):
+        """Friendlier string representation."""
         return "<Subject({})>".format(self.name)
 
 
 class Area(Collection):
+    """Areas collection."""
+
     __collection__ = 'areas'
 
-    class _Schema(Schema):
-        _key = String(required=True)  # area name
+    _key = String(required=True)  # area name
 
 
 class SpecializesIn(Relation):
+    """Teacher Specialization relation."""
+
     __collection__ = 'specializes_in'
 
-    class _Schema(Schema):
-        expertise_level = String(required=True, options=["expert", "medium", "basic"])
-        _key = String(required=True)
+    _key = String(required=True)
+    expertise_level = String(
+        required=True, options=["expert", "medium", "basic"])
 
     def __str__(self):
-        return "<SpecializesIn(_key={}, expertise_level={}, _from={}, _to={})>".format(
-            self._key, self.expertise_level, self._from, self._to)
+        """Friendlier string representation."""
+        return "<SpecializesIn(_key=" + \
+            "{}, expertise_level={}, _from={}, _to={})>".format(
+                self._key, self.expertise_level, self._from, self._to)
 
 
 class UniversityGraph(Graph):
+    """University Graph."""
+
     __graph__ = 'university_graph'
 
     graph_connections = [
@@ -83,6 +97,7 @@ class UniversityGraph(Graph):
         GraphConnection([Teacher, Student], Relation("resides_in"), Area)
 
     ]
+
 
 students_data = [
     Student(_key='S1001', name='John Wayne', age=30),
@@ -178,38 +193,52 @@ def data_create():
 
 if '__main__' == __name__:
     usage = """
-Usage: {} action
+Usage: {} action [db] [username] [password] [protocol] [host] [port]
 
 Supported actions are:
 
-test_data_create - Create the test Data in Database
 create_graph - Create the graph and all it's vertices and edges
 drop_graph - Drop the graph and all it's vertices and edges
-delete_database - delete test database
+graph_test - Run some sample queries against the graph
+
+Default values for optional args:
+db: test_db
+username: root
+password:
+protocol: http
+host: 127.0.0.1
+port: 8529
 """.format(sys.argv[0])
 
-    db_name = 'db_test'
-    username = 'root'
-    password = ''
+    if len(sys.argv) < 2:
+        print(usage)
+        sys.exit(1)
 
-    client = ArangoClient()
+    action = sys.argv[1]
+    db_name = sys.argv[2] if len(sys.argv) > 2 else 'test_db'
+    username = sys.argv[3] if len(sys.argv) > 3 else 'root'
+    password = sys.argv[4] if len(sys.argv) > 4 else ''
+    protocol = sys.argv[5] if len(sys.argv) > 5 else 'http'
+    host = sys.argv[6] if len(sys.argv) > 6 else '127.0.0.1'
+    port = int(sys.argv[7]) if len(sys.argv) > 7 else 8529
+
+    client = ArangoClient(protocol=protocol, host=host, port=port)
     test_db = client.db(db_name, username=username, password=password)
 
     db = Database(test_db)
 
     uni_graph = UniversityGraph(connection=db)
 
-    if len(sys.argv) > 1:
-        if 'test_data_create' == sys.argv[1]:
-            db.create_graph(uni_graph)
-            data_create()
-        elif 'drop_graph' == sys.argv[1]:
-            db.drop_graph(uni_graph)
-        elif 'delete_database' == sys.argv[1]:
-            client.delete_database(name=db_name)
-    else:
-        print(usage)
+    if action == 'create_graph':
+        db.create_graph(uni_graph)
+        data_create()
+        print("Graph and data created!")
 
+    elif action == 'drop_graph':
+        db.drop_graph(uni_graph)
+        print("Graph dropped")
+
+    elif action == 'graph_test':
         bruce = db.query(Teacher).by_key("T001")
         uni_graph.expand(bruce, depth=1, direction='any')
 

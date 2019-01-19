@@ -8,7 +8,7 @@ requires = [
 
 setup(
     name='arango-orm',
-    version='0.5.2.1',
+    version='0.5.3',
     description='A SQLAlchemy like ORM implementation for arangodb',
     long_description=("A SQLAlchemy like ORM implementation using "
                       " python-arangoas the backend library"),
@@ -18,7 +18,7 @@ setup(
     author='Kashif Iftikhar',
     author_email='kashif@compulife.com.pk',
     url="https://github.com/threatify/arango-orm",
-    download_url="https://github.com/threatify/arango-orm/archive/v0.5.2.tar.gz",
+    download_url="https://github.com/threatify/arango-orm/archive/v0.5.3.tar.gz",
     license="GNU General Public License v3 (GPLv3)",
     keywords='arangodb orm python',
     packages=find_packages(),

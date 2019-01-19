@@ -201,7 +201,8 @@ class Collection(CollectionBase):
                 setattr(new_obj, k, v)
             except AttributeError:
                 # ignore if we can't set attribute (it's most likely a @property)
-                log.warning("could not set attribute %s to %r. Invalid data?", k, v)
+                log.warning(
+                    "could not set attribute %s to %r. Invalid data?", k, v)
 
         if '_key' in in_dict and (not hasattr(new_obj, '_key') or new_obj._key is None):
             setattr(new_obj, '_key', in_dict['_key'])
@@ -215,10 +216,11 @@ class Collection(CollectionBase):
         if db is not None:
             # no dirty fields if initializing an object from db
             new_obj._dirty.clear()
+
         return new_obj
 
     def _dump(self, only=None, **kwargs):
-        "Dump all object attributes into a dict"
+        """Dump all object attributes into a dict."""
         schema = None
 
         if hasattr(self, '_instance_schema'):
@@ -312,13 +314,14 @@ class Relation(Collection):
         return ret
 
     @classmethod
-    def _load(cls, in_dict, instance=None, db=None):
+    def _load(cls, in_dict, only=None, instance=None, db=None):
         "Create object from given dict"
 
         if instance:
             in_dict = dict(instance._dump(), **in_dict)
 
-        data, errors = cls.schema().load(in_dict)
+        schema = cls.schema(only=only)
+        data, errors = schema.load(in_dict)
         if errors:
             raise SerializationError("Error loading object of relation {} - {}".format(
                 cls.__name__, errors))
@@ -330,19 +333,30 @@ class Relation(Collection):
                     data[k] = v
 
         new_obj = cls()
+        new_obj._instance_schema = schema
 
         if db:
             new_obj._db = db
         else:
             new_obj._db = getattr(instance, '_db', None)
 
+        if hasattr(new_obj, '_pre_process'):
+            new_obj._pre_process()
+
         for k, v in data.items():
-            if k in cls._safe_list or (k in dir(cls) and callable(getattr(cls, k))):
+            if (k in cls._safe_list or k in cls._refs or  # pylint: disable=E1101
+                    (k in dir(cls) and callable(getattr(cls, k)))):
+
                 raise MemberExistsException(
                     "{} is already a member of {} instance and cannot be overwritten".format(
                         k, cls.__name__))
 
-            setattr(new_obj, k, v)
+            try:
+                setattr(new_obj, k, v)
+            except AttributeError:
+                # ignore if we can't set attribute (it's most likely a @property)
+                log.warning(
+                    "could not set attribute %s to %r. Invalid data?", k, v)
 
         if '_key' in in_dict and (not hasattr(new_obj, '_key') or new_obj._key is None):
             setattr(new_obj, '_key', in_dict['_key'])
@@ -356,12 +370,18 @@ class Relation(Collection):
         if '_to' in in_dict:
             setattr(new_obj, '_to', in_dict['_to'])
 
+        if hasattr(new_obj, '_post_process'):
+            new_obj._post_process()
+
+        if db is not None:
+            # no dirty fields if initializing an object from db
+            new_obj._dirty.clear()
+
         return new_obj
 
-    def _dump(self, **kwargs):
-        "Dump all object attributes into a dict"
-
-        data = super(Relation, self)._dump(**kwargs)
+    def _dump(self, only=None, **kwargs):
+        """Dump all object attributes into a dict."""
+        data = super(Relation, self)._dump(only=only, **kwargs)
 
         if '_from' not in data and hasattr(self, '_from'):
             data['_from'] = getattr(self, '_from')
