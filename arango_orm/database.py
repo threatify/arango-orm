@@ -92,8 +92,27 @@ class Database(ArangoDatabase):
 
         return self._db.collection(document.__collection__).has(document._key)
 
-    def add(self, entity):
-        "Add a record to a collection"
+    def add(self, entity, if_present=None):
+        """
+        Add a record to a collection.
+
+        :param if_present: Can be None, 'ignore' or 'update'.
+            In case of None, if the document is already present then
+            arango.exceptions.DocumentInsertError is raised. 'ignore' ignores
+            raising the exception. 'update' updates the document if it already
+            exists.
+        """
+        assert if_present in [None, 'ignore', 'update']
+        if if_present and getattr(entity, '_key', None):
+            # for these cases, first check if document exists
+            if self.exists(entity):
+                if if_present == 'ignore':
+                    setattr(entity, '_db', self)
+                    return entity
+
+                elif if_present == 'update':
+                    return self.update(entity)
+
         dispatch(entity, 'pre_add', db=self)
 
         collection = self._db.collection(entity.__collection__)

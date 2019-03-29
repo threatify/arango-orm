@@ -14,7 +14,7 @@ class DetachedInstanceError(Exception):
 
 
 class SerializationError(Exception):
-    """Instance is not linked with any database."""
+    """Error serializing data."""
 
     pass
 

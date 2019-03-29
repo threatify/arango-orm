@@ -601,6 +601,13 @@ same structure as graph.expand method:
 CHANGES
 =======
 
+Version 0.5.4
+-------------
+
+- Database.add supports if_present parameter so if a record already exists
+  then instead of returning error it can be updated or the record exists error
+  is ignored.
+
 Version 0.5.3
 -------------
 
