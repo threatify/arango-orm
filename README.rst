@@ -601,6 +601,18 @@ same structure as graph.expand method:
 CHANGES
 =======
 
+Version 0.5.5
+--------------
+
+- Graph.expand has new parameter 'only' that allows traversing only records
+  that belong to the collections specified in the only list.
+  :param only: If given should be a string, Collection class or list of
+      strings or collection classes containing target collection names of
+      documents (vertices) that should be fetched.
+      Any vertices found in traversal that don't belong to the specified
+      collection names given in this parameter will be ignored.
+
+
 Version 0.5.4
 -------------
 

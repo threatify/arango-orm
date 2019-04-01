@@ -228,19 +228,25 @@ class Query(object):
 
     def one(self):
         "Assert that only one record is present for the query and return that record"
-
         assert 1 == self.count()
         return self.first()
 
     def aql(self, query, **kwargs):
         """
-        Return results based on given AQL query. bind_vars already contains @@collection param.
-        Query should always refer to the current collection using @collection
-        """
+        Run AQL query to get results.
 
+        Return results based on given AQL query. bind_vars already contains
+        @collection param. Query should always refer to the current collection
+        using @@collection.
+        """
         if 'bind_vars' in kwargs:
             kwargs['bind_vars']['@collection'] = self._bind_vars['@collection']
         else:
-            kwargs['bind_vars'] = {'@collection': self._bind_vars['@collection']}
+            kwargs['bind_vars'] = {
+                '@collection': self._bind_vars['@collection']
+            }
 
-        return [self._CollectionClass._load(rec, db=self._db) for rec in self._db.aql.execute(query, **kwargs)]
+        return [
+            self._CollectionClass._load(rec, db=self._db)
+            for rec in self._db.aql.execute(query, **kwargs)
+        ]

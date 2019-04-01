@@ -1,5 +1,5 @@
 from inspect import isclass
-from .collections import Relation
+from .collections import Relation, Collection, CollectionMeta
 # import pdb
 
 
@@ -217,33 +217,60 @@ class Graph(object):
 
         return doc_obj
 
-    def expand(self, doc_obj, direction='any', depth=1):
+    def expand(self, doc_obj, direction='any', depth=1, only=None):
         """
+        Graph traversal.
+
         Expand all links of given direction (outbound, inbound, any) upto given
         length for the given document object and update the object with the
-        found relations
-        """
+        found relations.
 
+        :param only: If given should be a string, Collection class or list of
+        strings or collection classes containing target collection names of
+        documents (vertices) that should be fetched.
+        Any vertices found in traversal that don't belong to the specified
+        collection names given in this parameter will be ignored.
+        """
         assert direction in ('any', 'inbound', 'outbound')
 
         graph = self._db.graph(self.__graph__)
         doc_id = doc_obj._id
         doc_obj._relations = {}  # clear any previous relations
+        filter_func = None
+        if only:
+            if not isinstance(only, (list, tuple)):
+                only = [only, ]
+
+            c_str = ""
+            for c in only:
+                if not isinstance(c, str) and hasattr(c, '__collection__'):
+                    c = c.__collection__
+
+                c_str += "vertex._id.match(/" + c + r"\/.*/) ||"
+
+            if c_str:
+                c_str = c_str[:-3]
+
+            filter_func = """
+                if ({condition})
+                    {{ return; }}
+                return 'exclude';
+            """.format(
+                condition=c_str
+            )
+
         results = graph.traverse(
             start_vertex=doc_id,
             direction=direction,
             vertex_uniqueness='path',
-            min_depth=1, max_depth=depth
+            min_depth=1, max_depth=depth,
+            filter_func=filter_func
         )
 
         self._objectify_results(results['paths'], doc_obj)
 
     def aql(self, query, **kwargs):
-        """
-        Return results based on given AQL query. bind_vars already contains @@collection param.
-        Query should always refer to the current collection using @collection
-        """
-
+        """Run AQL graph traversal query."""
         results = self._db.aql.execute(query, **kwargs)
 
         doc_obj = self._objectify_results(results)

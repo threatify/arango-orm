@@ -223,11 +223,10 @@ class Database(ArangoDatabase):
 
     def drop_graph(self, graph_object, drop_collections=True, **kwargs):
         """
-        Drop a graph, if drop_collections is True, drop all vertices and edges too
-        Optionally can provide a list of collection names as ignore_collections
-        so those collections are not dropped
+        Drop a graph, if drop_collections is True, drop all vertices and edges
+        too. Optionally can provide a list of collection names as
+        ignore_collections so those collections are not dropped
         """
-
         self._db.delete_graph(
             graph_object.__graph__,
             ignore_missing=True,
