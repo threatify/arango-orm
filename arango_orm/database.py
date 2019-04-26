@@ -140,12 +140,14 @@ class Database(ArangoDatabase):
         collection = self._db.collection(entity.__collection__)
         data = entity._dump()
 
-        dispatch(entity, 'pre_update', db=self)
-
         if only_dirty:
             if not entity._dirty:
                 return entity
-            data = {k: v for k, v in data.items() if k == '_key' or k in entity._dirty}
+            dispatch(entity, 'pre_update', db=self)  # In case of updates to fields
+            data = {k: v for k, v in entity._dump().items() if k == '_key' or k in entity._dirty}
+        else:
+            dispatch(entity, 'pre_update', db=self)
+            data = entity._dump()            
 
         # dispatch(entity, 'pre_update', db=self)
 
