@@ -3,12 +3,12 @@ from setuptools import setup, find_packages
 requires = [
     'six',
     'python-arango>=4.0',
-    'marshmallow>=2.10.0'
+    'marshmallow==2.16.0'
 ]
 
 setup(
     name='arango-orm',
-    version='0.5.5',
+    version='0.5.6',
     description='A SQLAlchemy like ORM implementation for arangodb',
     long_description=("A SQLAlchemy like ORM implementation using "
                       " python-arangoas the backend library"),

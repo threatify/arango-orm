@@ -116,8 +116,10 @@ class Graph(object):
         relation_to) and edge/relation (relation) objects
         """
 
-        relation._from = relation_from.__collection__ + '/' + relation_from._key
-        relation._to = relation_to.__collection__ + '/' + relation_to._key
+        # relation._from = relation_from.__collection__ + '/' + relation_from._key
+        # relation._to = relation_to.__collection__ + '/' + relation_to._key
+        relation._from = relation_from._id
+        relation._to = relation_to._id
 
         return relation
 
