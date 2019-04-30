@@ -1,11 +1,15 @@
 """
-A wrapper around python-arango's database class adding some SQLAlchemy like ORM methods to it.
+A wrapper around python-arango's database class.
+
+Adds some SQLAlchemy like ORM methods to it.
 """
+
 import logging
 from copy import deepcopy
 from inspect import isclass
 
 from arango.database import StandardDatabase as ArangoDatabase
+from arango.exceptions import CollectionDeleteError
 # from arango.executor import DefaultExecutor
 from .collections import CollectionBase, Collection
 from .query import Query
@@ -21,16 +25,18 @@ class Database(ArangoDatabase):
     """
 
     def __init__(self, db):
-
+        """Create database instance."""
         self._db = db
-        super(Database, self).__init__(db._conn)
+        super(self.__class__, self).__init__(db._conn)
 #         super(Database, self).__init__(
 #             connection=connection,
 #             executor=DefaultExecutor(connection)
 # )
 
     def _verify_collection(self, col):
-        "Verifies that col is a collection class or object of a collection class"
+        """
+        Verifies that col is a collection class or object.
+        """
 
         if isclass(col):
             assert issubclass(col, CollectionBase)
@@ -147,7 +153,7 @@ class Database(ArangoDatabase):
             data = {k: v for k, v in entity._dump().items() if k == '_key' or k in entity._dirty}
         else:
             dispatch(entity, 'pre_update', db=self)
-            data = entity._dump()            
+            data = entity._dump()
 
         # dispatch(entity, 'pre_update', db=self)
 
@@ -227,7 +233,9 @@ class Database(ArangoDatabase):
 
     def drop_graph(self, graph_object, drop_collections=True, **kwargs):
         """
-        Drop a graph, if drop_collections is True, drop all vertices and edges
+        Drop a graph.
+
+        If drop_collections is True, drop all vertices and edges
         too. Optionally can provide a list of collection names as
         ignore_collections so those collections are not dropped
         """
@@ -365,10 +373,10 @@ class Database(ArangoDatabase):
 
     def create_all(self, db_objects):
         """
-        Create all objects (collections, relations and graphs) present in the db_objects
-        list.
-        """
+        Create all objects (collections, relations and graphs).
 
+        Create all objects present in the db_objects list.
+        """
         # Collect all graphs
         graph_objs = [obj for obj in db_objects if hasattr(obj, '__graph__')]
 
@@ -394,4 +402,35 @@ class Database(ArangoDatabase):
                     log.info("Creating collection %s", obj.__collection__)
                     self.create_collection(obj)
                 else:
-                    log.debug("Collection %s already exists", obj.__collection__)
+                    log.debug(
+                        "Collection %s already exists", obj.__collection__)
+
+    def drop_all(self, db_objects):
+        """
+        Drop all objects (collections, relations and graphs).
+
+        Drop all objects present in the db_objects list.
+        """
+        # Collect all graphs
+        graph_objs = [obj for obj in db_objects if hasattr(obj, '__graph__')]
+
+        for graph_obj in graph_objs:
+            graph_info = self._get_graph_info(graph_obj)
+            if graph_info:
+                # graph exists, drop it
+                log.info("Dropping graph %s", graph_obj.__graph__)
+                graph_instance = graph_obj(connection=self)
+                self.drop_graph(graph_instance)
+            else:
+                # Graph exists, determine changes and update graph accordingly
+                log.debug("Graph %s does not exist", graph_obj.__graph__)
+
+        for obj in db_objects:
+            if hasattr(obj, '__bases__') and Collection in obj.__bases__:
+                try:
+                    self.drop_collection(obj)
+                except CollectionDeleteError:
+                    log.debug(
+                        "Not deleting missing collection: %s",
+                        obj.__collection__
+                    )

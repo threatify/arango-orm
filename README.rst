@@ -601,6 +601,16 @@ same structure as graph.expand method:
 CHANGES
 =======
 
+Version 0.5.7
+--------------
+
+- Support for Database.drop_all
+
+Version 0.5.6
+--------------
+
+- Bugfix: Handling pre_update properly
+
 Version 0.5.5
 --------------
 
