@@ -27,7 +27,7 @@ class Database(ArangoDatabase):
     def __init__(self, db):
         """Create database instance."""
         self._db = db
-        super(self.__class__, self).__init__(db._conn)
+        super(Database, self).__init__(db._conn)
 #         super(Database, self).__init__(
 #             connection=connection,
 #             executor=DefaultExecutor(connection)
