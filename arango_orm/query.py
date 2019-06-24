@@ -195,7 +195,7 @@ class Query(object):
 
         return self._db.aql.execute(aql, bind_vars=self._bind_vars)
 
-    def all(self):
+    def iterator(self):
         "Return all records considering current filter conditions (if any)"
 
         aql = self._make_aql()
@@ -209,13 +209,13 @@ class Query(object):
         # print(aql)
 
         results = self._db.aql.execute(aql, bind_vars=self._bind_vars)
-        ret = []
 
         for rec in results:
             only = [f.name for f in self._return_fields] if self._return_fields else None
-            ret.append(self._CollectionClass._load(rec, only=only, db=self._db))
+            yield self._CollectionClass._load(rec, only=only, db=self._db)
 
-        return ret
+    def all(self):
+        return list(self.iterator())
 
     def first(self):
         "Return the first record that matches the query"
