@@ -89,12 +89,17 @@ class Database(ArangoDatabase):
         super(Database, self).delete_collection(name=collection.__collection__)
 
     def has(self, collection, key):
-        "Check if the document with given key exists in the given collection"
+        """Check if the document with key exists in the given collection."""
 
         return self._db.collection(collection.__collection__).has(key)
 
     def exists(self, document):
-        "Similar to has but takes in a document object and searches using it's _key"
+        """
+        Check if document exists in database.
+
+        Similar to has but takes in a document object and searches
+        using it's _key.
+        """
 
         return self._db.collection(document.__collection__).has(document._key)
 
@@ -132,7 +137,7 @@ class Database(ArangoDatabase):
         return res
 
     def delete(self, entity, **kwargs):
-        "Delete given document"
+        """Delete given document."""
         dispatch(entity, 'pre_delete', db=self)
 
         collection = self._db.collection(entity.__collection__)
