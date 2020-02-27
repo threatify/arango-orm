@@ -26,6 +26,7 @@ class Query(object):
         self._return_fields = None
         self._limit = None
         self._limit_start_record = 0
+        self._cursor_ttl = None
 
     def count(self):
         "Return collection count"
@@ -195,6 +196,15 @@ class Query(object):
 
         return self._db.aql.execute(aql, bind_vars=self._bind_vars)
 
+    def ttl(self, nsec):
+        """
+        Set cursor TTL value in seconds.
+
+        A bigger TTL value can help avoid cursor timeout while iterating large datasets.
+        """
+        self._cursor_ttl = nsec
+        return self
+
     def iterator(self):
         "Return all records considering current filter conditions (if any)"
 
@@ -208,7 +218,7 @@ class Query(object):
             aql += '\n RETURN rec'
         # print(aql)
 
-        results = self._db.aql.execute(aql, bind_vars=self._bind_vars)
+        results = self._db.aql.execute(aql, bind_vars=self._bind_vars, ttl=self._cursor_ttl)
 
         for rec in results:
             only = [f.name for f in self._return_fields] if self._return_fields else None
