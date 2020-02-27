@@ -601,6 +601,12 @@ same structure as graph.expand method:
 CHANGES
 =======
 
+Version 0.5.9
+-------------
+
+- Support for specifying cursor ttl for queries. Otherwise arangodb has a small delay in return records after record number 1000 which causes
+  no cursor errors. Thanks @wonderbeyond for the PR.
+
 Version 0.5.8
 -------------
 

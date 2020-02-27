@@ -4,7 +4,7 @@ requires = ["six", "python-arango>=4.0", "marshmallow==2.18.0"]
 
 setup(
     name="arango-orm",
-    version="0.5.8",
+    version="0.5.9",
     description="A SQLAlchemy like ORM implementation for arangodb",
     long_description=(
         "A SQLAlchemy like ORM implementation using "
