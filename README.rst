@@ -8,6 +8,23 @@ Python ORM Layer For ArangoDB
 *python) and object serialization and de-serialization is handled using
 ***marshmallow**
 
+*TODO*:
+
+.. code-block:: python
+
+  db.add(
+    mygraph.relation(
+      Domain('example.com', _new=True), Relation("resolves_to"), IP('8.2.3.4', _new=True)
+    )
+  )
+  db.add(
+    mygraph.relation(
+      Domain('example.com', _new=True),
+      Relation("resolves_to"),
+      [IP('8.2.3.4', _new=True), IP('8.2.3.5', _new=True)]
+    )
+  )
+
 Installation:
 -------------
 
@@ -24,7 +41,7 @@ Connecting to a Database
     from arango import ArangoClient
     from arango_orm import Database
 
-    client = ArangoClient(protocol='http', host='localhost', port=8529)
+    client = ArangoClient(hosts='http://localhost:8529')
     test_db = client.db('test', username='test', password='test')
 
     db = Database(test_db)
@@ -32,6 +49,18 @@ Connecting to a Database
 
 Using a Connection Pool
 -----------------------
+
+Note: This is deprecated since python arango version 5.0. Since now the base
+library supports the hosts parameter. This will be removed in future versions.
+Users should instead use the pool in ArangoClient like:
+
+.. code-block:: python
+
+  client = ArangoClient(
+    hosts=['http://host1:8529', 'http://host2:8529'],
+    host_resolver='roundrobin'
+  )
+
 
 Connection pools allow using multiple connections for accessing the database.
 Though these can be used on a single machine setup, they are more useful to use
