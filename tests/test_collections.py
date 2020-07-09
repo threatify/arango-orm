@@ -88,6 +88,7 @@ class TestCollection(TestBase):
             "year": 2005,
             "nickname": "Lancer Evo",
         }
+
         c = Car._load(d)
 
         assert hasattr(c, "make")

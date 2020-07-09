@@ -1,7 +1,6 @@
 from setuptools import setup, find_packages
 
-requires = ["six", "python-arango>=4.0", "marshmallow==2.18.0"]
-
+requires = ["six", "python-arango>=4.0", "marshmallow"]
 setup(
     name="arango-orm",
     version="0.6",

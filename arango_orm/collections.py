@@ -1,7 +1,14 @@
 # import pdb
 import logging
 from six import with_metaclass
-from marshmallow import Schema, fields, ValidationError, missing
+from marshmallow import (
+    Schema,
+    fields,
+    ValidationError,
+    missing,
+    EXCLUDE,
+    INCLUDE,
+)
 
 from .references import (
     Relationship,
@@ -59,7 +66,14 @@ class CollectionBase(with_metaclass(CollectionMeta)):
             cls.__name__ + "Schema", (Schema,), cls._fields.copy()
         )
 
-        return SchemaClass(*args, **kwargs)
+        # Extra fields related schema configuration
+        unknown = EXCLUDE
+        if cls._allow_extra_fields is True:
+            unknown = INCLUDE
+
+        SC = SchemaClass(*args, **kwargs)
+        SC.unknown = unknown
+        return SC
 
 
 class Collection(CollectionBase):
@@ -213,19 +227,21 @@ class Collection(CollectionBase):
         # so we can dump the instance with the orginal schema
         schema = cls.schema(only=only)
 
-        data, errors = schema.load(in_dict)
-        if errors:
-            raise SerializationError(
-                "Error loading object of collection {} - {}".format(
-                    cls.__name__, errors
-                )
-            )
+        extra_fields = INCLUDE
+        if cls._allow_extra_fields is False:
+            extra_fields = EXCLUDE
+
+        data = schema.load(in_dict, unknown=extra_fields)
+
+        # remove _id field
+        if "_id" in data:
+            del data["_id"]
 
         # add any extra fields present in in_dict into data
-        if cls._allow_extra_fields:
-            for k, v in in_dict.items():
-                if k not in data and not k.startswith("_"):
-                    data[k] = v
+        # if cls._allow_extra_fields:
+        #     for k, v in in_dict.items():
+        #         if k not in data and not k.startswith("_"):
+        #             data[k] = v
 
         new_obj = cls()
         new_obj._instance_schema = schema
@@ -295,14 +311,14 @@ class Collection(CollectionBase):
         if schema is None:
             schema = self.schema()
 
-        data, errors = schema.dump(self)
+        data = schema.dump(self)
 
-        if errors:
-            raise SerializationError(
-                "Error dumping object of collection {} - {}".format(
-                    self.__class__.__name__, errors
-                )
-            )
+        # if errors:
+        #     raise SerializationError(
+        #         "Error dumping object of collection {} - {}".format(
+        #             self.__class__.__name__, errors
+        #         )
+        #     )
 
         if "_key" not in data and hasattr(self, "_key"):
             data["_key"] = getattr(self, "_key")
@@ -408,19 +424,15 @@ class Relation(Collection):
             in_dict = dict(instance._dump(), **in_dict)
 
         schema = cls.schema(only=only)
-        data, errors = schema.load(in_dict)
-        if errors:
-            raise SerializationError(
-                "Error loading object of relation {} - {}".format(
-                    cls.__name__, errors
-                )
-            )
 
-        # add any extra fields present in in_dict into data
-        if cls._allow_extra_fields:
-            for k, v in in_dict.items():
-                if k not in data and not k.startswith("_"):
-                    data[k] = v
+        extra_fields = INCLUDE
+        if cls._allow_extra_fields is False:
+            extra_fields = EXCLUDE
+
+        data = schema.load(in_dict, unknown=extra_fields)
+        # remove _id field
+        if "_id" in data:
+            del data["_id"]
 
         new_obj = cls()
         new_obj._instance_schema = schema
