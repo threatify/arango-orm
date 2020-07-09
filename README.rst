@@ -630,11 +630,42 @@ same structure as graph.expand method:
 CHANGES
 =======
 
+Version 0.6
+-----------
+
+- Validation is done on record add and update time too. Fixes #70
+- [Backward incompatible] Setting _key field to require=True means that it's value
+  should always be provided and is not to be auto-generated. To keep the previous
+  behavior do not set `required=True` for the field. This will allow both setting
+  it or having it auto generated.
+
+  .. code-block:: python
+
+    # allows _key auto-generation
+    class Person(Collection):
+
+        __collection__ = "persons"
+
+        _key = String()
+        name = String(required=True, allow_none=False)
+        age = Integer(allow_none=True, missing=None)
+        dob = Date(allow_none=True, missing=None)
+
+    # This will not allow _key auto-generation
+    class Person(Collection):
+
+        __collection__ = "persons"
+
+        _key = String(required=True)
+        name = String(required=True, allow_none=False)
+        age = Integer(allow_none=True, missing=None)
+        dob = Date(allow_none=True, missing=None)
+
+
 Version 0.5.9
 -------------
 
-- Support for specifying cursor ttl for queries. Otherwise arangodb has a small delay in return records after record number 1000 which causes
-  no cursor errors. Thanks @wonderbeyond for the PR.
+- Support for specifying cursor ttl for queries. Otherwise arangodb has a small delay in returning records after record number 1000 which causes no cursor errors. Thanks @wonderbeyond for the PR.
 
 Version 0.5.8
 -------------
