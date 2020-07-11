@@ -1,6 +1,32 @@
 CHANGES
 =======
 
+Version 0.6.1
+-------------
+
+- Support for specifiying a normal name for the `_key` field (only for models, for querying etc still need to use `_key`)
+
+  .. code-block:: python
+
+    class Person(Collection):
+
+      __collection__ = "persons"
+
+      _key_field = 'name'
+
+      name = String(required=True, allow_none=False)
+      age = Integer(allow_none=True, missing=None)
+
+    p1 = Person(_key='abc', age=30)
+    print(p1._key)
+    print(p1.name)  # same as p1._key
+    print(p1.age)
+
+    p2 = Person()
+    p2.name = 'xyz'
+    print(p2._key)
+    print(p2.name)  # same as p2._key
+    
 Version 0.6
 -----------
 

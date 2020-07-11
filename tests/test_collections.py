@@ -1,6 +1,9 @@
 "Test cases for the :module:`arango_orm.database`"
 
 from datetime import date
+from arango_orm import CollectionBase, Collection
+from arango_orm.fields import String, Integer, Dict, DateTime
+
 from . import TestBase
 from .data import Person, Car
 
@@ -99,9 +102,6 @@ class TestCollection(TestBase):
         self.assert_all_in(["make", "model", "year", "nickname"], c._dump())
 
     def test_07_collection_mixin(self):
-        from arango_orm import CollectionBase, Collection
-        from arango_orm.fields import String, Dict, DateTime
-
         class ResultMixin(CollectionBase):
             _key = String()
             _timestamp = DateTime()
@@ -124,9 +124,6 @@ class TestCollection(TestBase):
         )  # not String from ResultMixin
 
     def test_08_multi_level_collection_inheritence(self):
-        from arango_orm import CollectionBase, Collection
-        from arango_orm.fields import String, Dict, DateTime
-
         class ResultMixin(CollectionBase):
             _key = String()
             _timestamp = DateTime()
@@ -183,3 +180,23 @@ class TestCollection(TestBase):
         p1._dirty.clear()
         p1.name = "test"  # change name, even if the same as before!
         self.assert_has_same_items(p1._dirty, ["name"])
+
+    def test_11_key_field(self):
+        class Person(Collection):
+            __collection__ = "persons"
+            _key_field = "name"
+
+            name = String(required=True, allow_none=False)
+            age = Integer(allow_none=True, missing=None)
+
+        p1 = Person(_key="abc", age=30)
+        assert p1._key == "abc"
+        assert p1._key == p1.name
+        assert p1.age == 30
+
+        p2 = Person()
+        p2.name = "xyz"
+        assert p2._key == p2.name
+
+        p3 = Person(name="JL")
+        assert p3._key == p3.name

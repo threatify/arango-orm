@@ -120,12 +120,15 @@ class Collection(CollectionBase):
             setattr(self, k, v)
 
     def __setattr__(self, attr, value):
-        super(Collection, self).__setattr__(attr, value)
+        a_real = attr
+        if attr == self._key_field:
+            a_real = "_key"
+        super(Collection, self).__setattr__(a_real, value)
 
-        if attr not in self._fields:
+        if a_real not in self._fields:
             return
 
-        self._dirty.add(attr)
+        self._dirty.add(a_real)
 
     def __str__(self):
         ret = "<" + self.__class__.__name__
@@ -143,17 +146,14 @@ class Collection(CollectionBase):
     def __getattribute__(self, item):
 
         # print("__getatttribute__ called!")
-        if item not in super(Collection, self).__getattribute__(
-            "_refs"
-        ):  # pylint: disable=E1101
-            return super(Collection, self).__getattribute__(
-                item
-            )  # pylint: disable=E1101
+        if item not in super(Collection, self).__getattribute__("_refs"):
+            key_field = super(Collection, self).__getattribute__("_key_field")
+            if item == key_field:
+                return super(Collection, self).__getattribute__("_key")
+            else:
+                return super(Collection, self).__getattribute__(item)
 
-        if item not in super(Collection, self).__getattribute__(
-            "_refs_vals"
-        ):  # pylint: disable=E1101
-
+        if item not in super(Collection, self).__getattribute__("_refs_vals"):
             # print("trying to load ref val")
             # pdb.set_trace()
             if (
