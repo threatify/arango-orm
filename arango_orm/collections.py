@@ -8,7 +8,7 @@ from marshmallow import (
     missing,
     EXCLUDE,
     INCLUDE,
-)
+    post_load)
 
 from .references import (
     Relationship,
@@ -52,6 +52,13 @@ class CollectionMeta(type):
         return new_class
 
 
+class ObjectSchema(Schema):
+    object_class: callable = None
+    @post_load
+    def make_object(self, data, **kwargs):
+        return self.object_class(**data)
+
+
 class CollectionBase(with_metaclass(CollectionMeta)):
     "Base class for Collections, Nodes and Links"
 
@@ -62,8 +69,9 @@ class CollectionBase(with_metaclass(CollectionMeta)):
     @classmethod
     def schema(cls, *args, **kwargs):
 
+        objects_dict = cls._fields.copy()
         SchemaClass = type(
-            cls.__name__ + "Schema", (Schema,), cls._fields.copy()
+            cls.__name__ + "Schema", (ObjectSchema,), objects_dict
         )
 
         # Extra fields related schema configuration
@@ -73,6 +81,8 @@ class CollectionBase(with_metaclass(CollectionMeta)):
 
         SC = SchemaClass(*args, **kwargs)
         SC.unknown = unknown
+        SC.object_class = cls
+
         return SC
 
 
@@ -123,6 +133,8 @@ class Collection(CollectionBase):
         a_real = attr
         if attr == self._key_field:
             a_real = "_key"
+        if attr == "_id":
+            return
         super(Collection, self).__setattr__(a_real, value)
 
         if a_real not in self._fields:
@@ -233,17 +245,13 @@ class Collection(CollectionBase):
 
         data = schema.load(in_dict, unknown=extra_fields)
 
-        # remove _id field
-        if "_id" in data:
-            del data["_id"]
-
         # add any extra fields present in in_dict into data
         # if cls._allow_extra_fields:
         #     for k, v in in_dict.items():
         #         if k not in data and not k.startswith("_"):
         #             data[k] = v
 
-        new_obj = cls()
+        new_obj = data
         new_obj._instance_schema = schema
 
         if db:
@@ -253,29 +261,6 @@ class Collection(CollectionBase):
 
         if hasattr(new_obj, "_pre_process"):
             new_obj._pre_process()
-
-        for k, v in data.items():
-            if (
-                k in cls._safe_list
-                or k in cls._refs
-                or (  # pylint: disable=E1101
-                    k in dir(cls) and callable(getattr(cls, k))
-                )
-            ):
-
-                raise MemberExistsException(
-                    "{} is already a member of {} instance and cannot be overwritten".format(
-                        k, cls.__name__
-                    )
-                )
-
-            try:
-                setattr(new_obj, k, v)
-            except AttributeError:
-                # ignore if we can't set attribute (it's most likely a @property)
-                log.warning(
-                    "could not set attribute %s to %r. Invalid data?", k, v
-                )
 
         if "_key" in in_dict and (
             not hasattr(new_obj, "_key") or new_obj._key is None
@@ -431,10 +416,10 @@ class Relation(Collection):
 
         data = schema.load(in_dict, unknown=extra_fields)
         # remove _id field
-        if "_id" in data:
-            del data["_id"]
+        # if "_id" in data:
+        #     del data["_id"]
 
-        new_obj = cls()
+        new_obj = data
         new_obj._instance_schema = schema
 
         if db:
@@ -444,29 +429,6 @@ class Relation(Collection):
 
         if hasattr(new_obj, "_pre_process"):
             new_obj._pre_process()
-
-        for k, v in data.items():
-            if (
-                k in cls._safe_list
-                or k in cls._refs
-                or (  # pylint: disable=E1101
-                    k in dir(cls) and callable(getattr(cls, k))
-                )
-            ):
-
-                raise MemberExistsException(
-                    "{} is already a member of {} instance and cannot be overwritten".format(
-                        k, cls.__name__
-                    )
-                )
-
-            try:
-                setattr(new_obj, k, v)
-            except AttributeError:
-                # ignore if we can't set attribute (it's most likely a @property)
-                log.warning(
-                    "could not set attribute %s to %r. Invalid data?", k, v
-                )
 
         if "_key" in in_dict and (
             not hasattr(new_obj, "_key") or new_obj._key is None

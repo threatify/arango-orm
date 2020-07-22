@@ -1,5 +1,5 @@
 from datetime import datetime
-from arango_orm.fields import String, Date, Integer, Boolean
+from arango_orm.fields import String, Date, Integer, Boolean, List, Nested, Number
 from arango_orm import Collection, Relation, Graph, GraphConnection
 from arango_orm.references import relationship, graph_relationship
 
@@ -7,6 +7,16 @@ from .utils import lazy_property
 
 
 class Person(Collection):
+
+    class Hobby(Collection):
+
+        class Equipment(Collection):
+            name = String(required=False, allow_none=True)
+            price = Number(required=False, allow_none=True)
+
+        name = String(required=False, allow_none=True)
+        type = String(required=True, allow_none=False)
+        equipment = List(Nested(Equipment.schema()), required=False, allow_none=True, default=None)
 
     __collection__ = "persons"
     _allow_extra_fields = False
@@ -18,7 +28,8 @@ class Person(Collection):
     age = Integer(allow_none=True, missing=None)
     dob = Date(allow_none=True, missing=None)
     is_staff = Boolean(default=False)
-
+    favorite_hobby = Nested(Hobby.schema(), required=False, allow_none=True, default=None)
+    hobby = List(Nested(Hobby.schema()), required=False, allow_none=True, default=None)
     cars = relationship(__name__ + ".Car", "_key", target_field="owner_key")
 
     @property
