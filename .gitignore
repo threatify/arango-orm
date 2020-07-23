@@ -95,3 +95,5 @@ ENV/
 tags
 .tags
 .tags1
+
+.vscode

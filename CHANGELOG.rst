@@ -1,6 +1,20 @@
 CHANGES
 =======
 
+Versoin 0.6.2
+-------------
+
+Merging PR from @chris-green with thanks.
+
+- Return embedded objects in schemas (using Nested fields) as their object equivalent instead of dicts.
+  This change instanciates all objects upon load using the @post_load decorator upon schemas,
+  automatically instanciating both top level objects and their embedded counterparts.
+
+- Add docker-compose and pytest for quick, consistent setup of application and tests for contributors to package.
+
+- Added getting-started to explain how to get started on how to run tests for package.
+
+
 Version 0.6.1
 -------------
 
