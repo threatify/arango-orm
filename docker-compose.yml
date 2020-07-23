@@ -1,0 +1,27 @@
+version: '2.1'
+
+services:
+  arango_orm:
+    build: .
+    ports:
+            - "8000:8000"
+    volumes:
+      - .:/code
+    env_file:
+      - .env
+    depends_on:
+      - arangodb
+
+  arangodb:
+    image: arangodb:3.6.2
+    ports:
+            - "8560:8529"
+    expose:
+            - "8529"
+    volumes:
+      - /var/lib/arangodb3
+      - ./db/database-dump:/docker-entrypoint-initdb.d
+      - ./db/initial-data:/initial-data
+      - ./db/various_dumps:/db-dump
+    environment:
+      ARANGO_ROOT_PASSWORD: password

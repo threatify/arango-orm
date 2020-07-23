@@ -2,7 +2,7 @@
 
 from datetime import date
 from arango_orm import CollectionBase, Collection
-from arango_orm.fields import String, Integer, Dict, DateTime
+from arango_orm.fields import String, Integer, Dict, DateTime, Nested, List
 
 from . import TestBase
 from .data import Person, Car
@@ -10,7 +10,6 @@ from .data import Person, Car
 
 class TestCollection(TestBase):
     def test_01_object_from_dict(self):
-
         pd = {
             "_key": "37405-4564665-7",
             "dob": "2016-09-12",
@@ -24,7 +23,6 @@ class TestCollection(TestBase):
         assert "37405-4564665-7" == new_person._key
 
     def test_02_object_creation(self):
-
         p = Person(
             name="test", _key="12312", dob=date(year=2016, month=9, day=12)
         )
@@ -33,7 +31,6 @@ class TestCollection(TestBase):
         assert date(year=2016, month=9, day=12) == p.dob
 
     def test_03_object_dump(self):
-
         p = Person(
             name="test", _key="12312", dob=date(year=2016, month=9, day=12)
         )
@@ -46,7 +43,6 @@ class TestCollection(TestBase):
         assert "2016-09-12" == d["dob"]
 
     def test_03_01_object_dump_only(self):
-
         p = Person(
             name="test", _key="12312", dob=date(year=2016, month=9, day=12)
         )
@@ -56,7 +52,6 @@ class TestCollection(TestBase):
         self.assert_has_same_items(only_fields, d.keys())
 
     def test_04_object_partial_fields_and_dump(self):
-
         p = Person(name="test", _key="12312")
         d = p._dump()
 
@@ -65,7 +60,6 @@ class TestCollection(TestBase):
         assert d["dob"] is None
 
     def test_05_object_load_and_dump_with_extra_fields_disabled(self):
-
         d = {
             "_key": "person_1",
             "name": "John Doe",
@@ -84,7 +78,6 @@ class TestCollection(TestBase):
         assert "profession" not in d2
 
     def test_06_object_load_and_dump_with_extra_fields_enabled(self):
-
         d = {
             "make": "Mitsubishi",
             "model": "Lancer",
@@ -120,7 +113,7 @@ class TestCollection(TestBase):
         )
 
         assert (
-            type(PingResult._fields["stats"]) is Dict
+                type(PingResult._fields["stats"]) is Dict
         )  # not String from ResultMixin
 
     def test_08_multi_level_collection_inheritence(self):
@@ -146,7 +139,7 @@ class TestCollection(TestBase):
         )
 
         assert (
-            type(PingResult._fields["stats"]) is Dict
+                type(PingResult._fields["stats"]) is Dict
         )  # not String from ResultMixin
 
     def test_09_load_from_instance_with_extra_patch_data(self):
@@ -171,10 +164,10 @@ class TestCollection(TestBase):
             }
         )
         self.assert_has_same_items(
-            p1._dirty, ["name", "_key", "dob", "age", "is_staff"]
+            p1._dirty, ["name", "_key", "dob", "age", "is_staff", "hobby", "favorite_hobby"]
         )
         self.assert_has_same_items(
-            p2._dirty, ["name", "_key", "dob", "age", "is_staff"]
+            p2._dirty, ["name", "_key", "dob", "age", "is_staff", "hobby", "favorite_hobby"]
         )
 
         p1._dirty.clear()
@@ -200,3 +193,62 @@ class TestCollection(TestBase):
 
         p3 = Person(name="JL")
         assert p3._key == p3.name
+
+    def test_12_nested_field(self):
+        pd = {
+            "_key": "37405-4564665-7",
+            "dob": "2016-09-12",
+            "name": "Kashif Iftikhar",
+            "favorite_hobby":
+                {
+                    "name": "Programming",
+                    "type": "Challenging"
+                }
+        }
+        new_person = Person._load(pd)
+        self.assertEqual("37405-4564665-7", new_person._key)
+        self.assertEqual("Kashif Iftikhar", new_person.name)
+        self.assertEqual(date(year=2016, month=9, day=12), new_person.dob)
+        self.assertEqual("37405-4564665-7", new_person._key)
+        self.assertEqual("Programming", new_person.favorite_hobby.name)
+        self.assertEqual("Challenging", new_person.favorite_hobby.type)
+
+    def test_13_nested_list_field(self):
+        pd = {
+            "_key": "37405-4564665-7",
+            "dob": "2016-09-12",
+            "name": "Kashif Iftikhar",
+            "hobby": [
+                {
+                    "name": "Skydiving",
+                    "type": "Extreme",
+                    "equipment": [{
+                        "name": "parachute",
+                        "price": 2000.00
+                    }],
+                },
+                {
+                    "name": "Knitting",
+                    "type": "Relaxing"
+                },
+
+            ]
+        }
+        
+        new_person = Person._load(pd)
+        self.assertEqual("37405-4564665-7", new_person._key)
+        self.assertEqual("Kashif Iftikhar", new_person.name)
+        self.assertEqual(date(year=2016, month=9, day=12), new_person.dob)
+        self.assertEqual("37405-4564665-7", new_person._key)
+
+        self.assertEqual(2, len(new_person.hobby))
+        skydiving = new_person.hobby[0]
+        self.assertEqual(skydiving.name, "Skydiving")
+        self.assertEqual(skydiving.type, "Extreme")
+        self.assertEqual(len(skydiving.equipment), 1)
+        self.assertEqual(skydiving.equipment[0].name, "parachute")
+        self.assertEqual(skydiving.equipment[0].price, 2000.00)
+
+        knitting = new_person.hobby[1]
+        self.assertEqual(knitting.name, "Knitting")
+        self.assertEqual(knitting.type, "Relaxing")
