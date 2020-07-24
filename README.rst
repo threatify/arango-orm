@@ -2,28 +2,12 @@ Python ORM Layer For ArangoDB
 =============================
 
 **arango_orm** is a python ORM layer inspired by SQLAlchemy but aimed to work
-*with the multi-model database ArangoDB. It supports accessing both collections
-*and graphs using the ORM. The actual communication with the database is done
-*using **python-arango** (the database driver for accessing arangodb from
-*python) and object serialization and de-serialization is handled using
-***marshmallow**
+with the multi-model database ArangoDB. It supports accessing both collections
+and graphs using the ORM. The actual communication with the database is done
+using **python-arango** (the database driver for accessing arangodb from
+python) and object serialization and de-serialization is handled using
+**marshmallow**.
 
-*TODO*:
-
-.. code-block:: python
-
-  db.add(
-    mygraph.relation(
-      Domain('example.com', _new=True), Relation("resolves_to"), IP('8.2.3.4', _new=True)
-    )
-  )
-  db.add(
-    mygraph.relation(
-      Domain('example.com', _new=True),
-      Relation("resolves_to"),
-      [IP('8.2.3.4', _new=True), IP('8.2.3.5', _new=True)]
-    )
-  )
 
 Installation:
 -------------
