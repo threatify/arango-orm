@@ -207,8 +207,8 @@ class Query(object):
             % update_clause
             + options
         )
-        log.critical(aql)
-        log.critical(self._bind_vars)
+        log.info(aql)
+        log.info(self._bind_vars)
 
         return self._db.aql.execute(aql, bind_vars=self._bind_vars)
 
