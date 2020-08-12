@@ -21,7 +21,7 @@ from .data import (
     DummyRelation,
     DummyToCol1,
     DummyToCol2,
-)
+    Car)
 
 log = logging.getLogger(__name__)
 
@@ -32,12 +32,20 @@ class TestDatabase(TestBase):
         db = cls._get_db_obj()
         if not db.has_collection(Person):
             db.create_collection(Person)
+        if not db.has_collection(Car):
+            db.create_collection(Car)
+        if not db.has_collection(Student):
+            db.create_collection(Student)
 
     @classmethod
     def tearDownClass(cls):
         db = cls._get_db_obj()
         if db.has_collection(Person):
             db.drop_collection(Person)
+        if db.has_collection(Car):
+            db.drop_collection(Car)
+        if db.has_collection(Student):
+            db.drop_collection(Student)
 
     def test_01_database_object_creation(self):
 
@@ -353,3 +361,104 @@ class TestDatabase(TestBase):
         fresh = db.query(Person).by_key("12312")
         assert fresh.name == "NB-1"
         assert fresh.age == 99
+
+    def test_21_bulk_create(self):
+
+        db = self._get_db_obj()
+
+        p_ref_10 = Person(
+            name="test_10",
+            age=18,
+            dob=date(year=2016, month=9, day=12),
+        )
+        p_ref_11 = Person(
+            name="test_11",
+            age=18,
+            dob=date(year=2016, month=9, day=12),
+        )
+        db.bulk_add(entity_list=[p_ref_10, p_ref_11])
+        self.assertIsNotNone(p_ref_10._key)
+        self.assertIsNotNone(p_ref_11._key)
+
+        p_ref10_recall = db.query(Person).by_key(p_ref_10._key)
+        self.assertEqual(p_ref_10.name, p_ref10_recall.name)
+        self.assertEqual(p_ref_10._key, p_ref10_recall._key)
+        self.assertEqual(p_ref_10.age, p_ref10_recall.age)
+        self.assertEqual(p_ref_10.dob, p_ref10_recall.dob)
+
+    def test_22_mixed_collection_bulk_create(self):
+
+        db = self._get_db_obj()
+
+        p_ref_10 = Person(
+            name="test_10",
+            age=18,
+            dob=date(year=2016, month=9, day=12),
+        )
+        p_ref_11 = Person(
+            name="test_11",
+            age=18,
+            dob=date(year=2016, month=9, day=12),
+        )
+        car1 = Car(make="Honda", model="Fiat", year=2010)
+        car2 = Car(make="Honda", model="Skoda", year=2015)
+
+        db.bulk_add(entity_list=[p_ref_10, p_ref_11, car1, car2])
+        self.assertIsNotNone(p_ref_10._key)
+        self.assertIsNotNone(p_ref_11._key)
+        self.assertIsNotNone(car1._key)
+        self.assertIsNotNone(car2._key)
+
+        p_ref10_recall = db.query(Person).by_key(p_ref_10._key)
+        self.assertEqual(p_ref_10.name, p_ref10_recall.name)
+        self.assertEqual(p_ref_10._key, p_ref10_recall._key)
+        self.assertEqual(p_ref_10.age, p_ref10_recall.age)
+        self.assertEqual(p_ref_10.dob, p_ref10_recall.dob)
+
+        car2_recall = db.query(Car).by_key(car2._key)
+        self.assertEqual(car2._key, car2_recall._key)
+        self.assertEqual(car2.make, car2_recall.make)
+        self.assertEqual(car2.model, car2_recall.model)
+        self.assertEqual(car2.year, car2_recall.year)
+
+    def test_23_bulk_update(self):
+
+        db = self._get_db_obj()
+        p_ref1 = db.query(Person).by_key("12312")
+        p_ref2 = db.query(Person).by_key("12345")
+        # First, let's watch the normal behavior
+        p_ref1.name = "NB-1"
+        p_ref2.name = "NB-2"
+        db.bulk_update(entity_list=[p_ref1, p_ref2])
+        p_ref1 = db.query(Person).by_key("12312")
+        p_ref2 = db.query(Person).by_key("12345")
+        self.assertEqual(p_ref1.name, "NB-1")
+        self.assertEqual(p_ref2.name, "NB-2")
+
+    def test_24_mixed_collection_bulk_update(self):
+
+        db = self._get_db_obj()
+        db.create_collection(Student)
+
+        p_ref1 = db.query(Person).by_key("12312")
+        p_ref2 = db.query(Person).by_key("12345")
+        s1 = Student(_key="S1001", name="John Wayne", age=30)
+        s2 = Student(_key="S1002", name="Lilly Parker", age=22)
+        db.add(s1)
+        db.add(s2)
+
+        s1.name = "Wayne John"
+        s2.name = "Parker Lilly"
+        # First, let's watch the normal behavior
+        p_ref1.name = "NB-10"
+        p_ref2.name = "NB-20"
+        db.bulk_update(entity_list=[s1, s2, p_ref1, p_ref2])
+
+        p_ref1 = db.query(Person).by_key("12312")
+        p_ref2 = db.query(Person).by_key("12345")
+        s1 = db.query(Student).by_key("S1001")
+        s2 = db.query(Student).by_key("S1002")
+        self.assertEqual(p_ref1.name, "NB-10")
+        self.assertEqual(p_ref2.name, "NB-20")
+        self.assertEqual("Wayne John", s1.name)
+        self.assertEqual("Parker Lilly", s2.name)
