@@ -19,8 +19,8 @@ class TestBase(unittest.TestCase):
     @classmethod
     def get_client(cls):
         if cls.client is None:
-            arango_ip = os.environ.get('ARANGO_IP', "http://127.0.0.1:8529")
-            cls.client = ArangoClient(hosts=arango_ip)
+            arango_hosts = os.environ.get('ARANGO_HOSTS', "http://127.0.0.1:8529")
+            cls.client = ArangoClient(hosts=arango_hosts)
 
         return cls.client
 
