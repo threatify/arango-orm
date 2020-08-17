@@ -236,6 +236,32 @@ ___________________
     db.query(Student).delete()
 
 
+
+Bulk Create Records
+_______________________
+
+.. code-block:: python
+
+    s1 = Student(name='test1', _key='12345', dob=date(year=2016, month=9, day=12))
+    s2 = Student(name='test2', _key='22346', dob=date(year=2015, month=9, day=12)
+    car1 = Car(make="Honda", model="Fiat", year=2010)
+    car2 = Car(make="Honda", model="Skoda", year=2015)
+
+    db.bulk_add(entity_list=[p_ref_10, p_ref_11, car1, car2])
+
+
+Bulk Update Records
+_______________________
+
+.. code-block:: python
+
+    p_ref1 = db.query(Person).by_key("12312")
+    p_ref2 = db.query(Person).by_key("12345")
+    p_ref1.name = "Bruce"
+    p_ref2.name = "Eliza"
+    db.bulk_update(entity_list=[p_ref1, p_ref2])
+
+
 Query Using AQL
 ________________
 
