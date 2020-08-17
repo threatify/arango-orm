@@ -635,3 +635,14 @@ same structure as graph.expand method:
     gotham_residents = [rel._next.name for rel in obj._relations['resides_in']]
     print(gotham_residents)
     # ['Bruce Wayne', 'John Wayne']
+
+
+For Developers
+==============
+
+Running the Test Cases
+----------------------
+
+```bash
+ARANGO_HOSTS="http://127.0.0.1:8529" ARANGO_USERNAME=root ARANGO_PASSWORD=toor ARANGO_DATABASE=test_db pytest tests
+```
