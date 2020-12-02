@@ -319,8 +319,9 @@ These are similar in functionality to SQLAlchemy's relationship function.
         def __str__(self):
             return "<Car({} - {} - {})>".format(self.make, self.model, self.year)
 
-    client = ArangoClient(username='test', password='test')
-    db = Database(client.db('test'))
+    client = ArangoClient(hosts='http://localhost:8529')
+    test_db = client.db('test', username='test', password='test')
+    db = Database(test_db)
 
     p = Person(_key='kashif', name='Kashif Iftikhar')
     db.add(p)
@@ -406,7 +407,6 @@ First we create some collections and relationships
 
         __collection__ = 'specializes_in'
 
-        _key = String(required=True)
         expertise_level = String(required=True, options=["expert", "medium", "basic"])
 
         def __str__(self):
@@ -439,8 +439,8 @@ Now it's time to create the graph. Note that we don't need to create the collect
     from arango import ArangoClient
     from arango_orm.database import Database
 
-    client = ArangoClient(username='test', password='test')
-    test_db = client.db('test')
+    client = ArangoClient(hosts='http://localhost:8529')
+    test_db = client.db('test', username='test', password='test')
 
     db = Database(test_db)
 
