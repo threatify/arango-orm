@@ -1,5 +1,7 @@
 # import pdb
 import logging
+
+from marshmallow.fields import String
 from six import with_metaclass
 from marshmallow import (
     Schema,
@@ -66,6 +68,9 @@ class CollectionBase(with_metaclass(CollectionMeta)):
     _allow_extra_fields = False
     _collection_config = {}
 
+    _inheritance_field = None
+    _inheritance_mapping = {}
+
     @classmethod
     def schema(cls, *args, **kwargs):
 
@@ -128,6 +133,11 @@ class Collection(CollectionBase):
         # FIXME: shall we ignore attrs not defined in schema
         for k, v in kwargs.items():
             setattr(self, k, v)
+
+        if self._inheritance_field is not None \
+                and getattr(self, self._inheritance_field) is None \
+                and self.__class__.__name__ in self._inheritance_mapping:
+            setattr(self, self._inheritance_field, self._inheritance_mapping[self.__class__.__name__])
 
     def __setattr__(self, attr, value):
         a_real = attr

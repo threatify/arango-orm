@@ -1,5 +1,9 @@
 from inspect import isclass
+from typing import Type
+
 from .collections import Relation, Collection, CollectionMeta
+
+
 # import pdb
 
 
@@ -69,7 +73,6 @@ class GraphConnection(object):
 
 
 class Graph(object):
-
     __graph__ = None
     graph_connections = None
 
@@ -80,6 +83,7 @@ class Graph(object):
         self.edges = {}
         self._db = connection
         self._graph = None
+        self.inheritances = {}
 
         if graph_name is not None:
             self.__graph__ = graph_name
@@ -110,6 +114,21 @@ class Graph(object):
                 if gc.relation.__collection__ not in self.edges:
                     self.edges[gc.relation.__collection__] = gc.relation
 
+        for col_name, col in [(col_name, col) for col_name, col in self.vertices.items()
+                              if len(col._inheritance_mapping) > 0]:
+            subclasses = self._get_recursive_subclasses(col).union([col])
+
+            if len(subclasses) > 1:
+                _inheritances = {}
+                for subclass in [subclass for subclass in subclasses if subclass.__name__ in col._inheritance_mapping]:
+                    _inheritances[col._inheritance_mapping[subclass.__name__]] = subclass
+                if len(_inheritances):
+                    self.inheritances[col_name] = _inheritances
+
+    def _get_recursive_subclasses(self, cls):
+        return set(cls.__subclasses__()).union(
+            [s for c in cls.__subclasses__() for s in self._get_recursive_subclasses(c)])
+
     def relation(self, relation_from, relation, relation_to):
         """
         Return relation (edge) object from given collection (relation_from and
@@ -123,11 +142,44 @@ class Graph(object):
 
         return relation
 
+    def _inheritance_mapping_inspector(self, collection_class: Collection, doc_dict: dict):
+        field = collection_class._inheritance_field
+        mapping = self.inheritances[collection_class.__collection__]
+
+        if doc_dict[field] not in mapping \
+                or not issubclass(mapping[doc_dict[field]], Collection):
+            return False
+
+        return mapping[doc_dict[field]]
+
+    def inheritance_mapping_resolver(self, col_name: str, doc_dict) -> Type[Collection]:
+        """
+        Custom method to resolve inheritance mapping.
+
+        It allows the user to resolve the class of the current object based on any condition (discriminator field a/o
+        inference).
+
+        :param col_name: The collection name retrieved from the object _id property
+        :param doc_dict: The object as dict
+        :return Type[Collection]
+        """
+        return self.vertices[col_name]
+
     def _doc_from_dict(self, doc_dict):
         "Given a result dictionary, creates and returns a document object"
 
         col_name = doc_dict['_id'].split('/')[0]
         CollectionClass = self.vertices[col_name]
+
+        if CollectionClass.__collection__ in self.inheritances:
+            found_class = self._inheritance_mapping_inspector(CollectionClass, doc_dict)
+            if issubclass(found_class, Collection):
+                CollectionClass = found_class
+
+        elif callable(self.inheritance_mapping_resolver):
+            resolved_class = self.inheritance_mapping_resolver(col_name, doc_dict)
+            if issubclass(resolved_class, Collection):
+                CollectionClass = resolved_class
 
         # remove empty values
         keys_to_del = []

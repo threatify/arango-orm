@@ -1,5 +1,5 @@
 from datetime import datetime
-from arango_orm.fields import String, Date, Integer, Boolean, List, Nested, Number
+from arango_orm.fields import String, Date, Integer, Boolean, List, Nested, Number, Float
 from arango_orm import Collection, Relation, Graph, GraphConnection
 from arango_orm.references import relationship, graph_relationship
 
@@ -236,3 +236,127 @@ specializations_data = [
 # FOR v, e, p IN 1..3 INBOUND 'areas/gotham'
 # GRAPH 'university_graph'
 # RETURN p
+
+# Inheritance data
+class Owner(Collection):
+    __collection__ = "owner"
+
+    _key = String()
+    name = String()
+
+
+class Vehicle(Collection):
+    __collection__ = "vehicle"
+
+    _inheritance_field = "discr"
+    _inheritance_mapping = {
+        'Bike': 'moto',
+        'Truck': 'truck'
+    }
+
+    _key = String()
+    brand = String()
+    model = String()
+    discr = String(required=True)
+
+
+class Bike(Vehicle):
+    motor_size = Float()
+
+
+class Truck(Vehicle):
+    traction_power = Float()
+
+
+class Own(Relation):
+    __collection__ = "own"
+
+
+class OwnershipGraph(Graph):
+    __graph__ = "ownership_graph"
+
+    graph_connections = [
+        GraphConnection(Owner, Own, Vehicle)
+    ]
+
+
+owner_data = [
+    Owner(_key='001', name="John Doe"),
+    Owner(_key='002', name="Billy the Kid"),
+    Owner(_key='003', name="Lucky Luke")
+]
+
+vehicle_data = [
+    Bike(_key='001', motor_size=125, brand='Harley Davidson', model='Hummer'),
+    Truck(_key='002', traction_power=520, brand='Renault Trucks', model='T High')
+]
+
+own_data = [
+    Own(_from='owner/001', _to='vehicle/001'),
+    Own(_from='owner/002', _to='vehicle/002'),
+    Own(_from='owner/003', _to='vehicle/001'),
+    Own(_from='owner/003', _to='vehicle/002')
+]
+
+
+class Owner2(Collection):
+    __collection__ = "owner"
+
+    _key = String()
+    name = String()
+
+
+class Vehicle2(Collection):
+    __collection__ = "vehicle"
+
+    _key = String()
+    brand = String()
+    model = String()
+
+
+class Bike2(Vehicle2):
+    motor_size = Float()
+
+
+class Truck2(Vehicle2):
+    traction_power = Float()
+
+
+class Own2(Relation):
+    __collection__ = "own"
+
+
+class OwnershipGraph2(Graph):
+    __graph__ = "ownership_graph"
+
+    graph_connections = [
+        GraphConnection(Owner2, Own2, Vehicle2)
+    ]
+
+    def inheritance_mapping_resolver(self, col_name: str, doc_dict: dict = {}):
+        if col_name == 'vehicle':
+            if 'traction_power' in doc_dict:
+                return Truck2
+            else:
+                return Bike2
+
+        return self.vertices[col_name]
+
+
+owner_data2 = [
+    Owner2(_key='001', name="John Doe"),
+    Owner2(_key='002', name="Billy the Kid"),
+    Owner2(_key='003', name="Lucky Luke")
+]
+
+vehicle_data2 = [
+    Bike2(_key='001', motor_size=125, brand='Harley Davidson', model='Hummer'),
+    Truck2(_key='002', traction_power=520, brand='Renault Trucks', model='T High')
+]
+
+own_data2 = [
+    Own2(_from='owner/001', _to='vehicle/001'),
+    Own2(_from='owner/002', _to='vehicle/002'),
+    Own2(_from='owner/003', _to='vehicle/001'),
+    Own2(_from='owner/003', _to='vehicle/002')
+]
