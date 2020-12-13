@@ -7,9 +7,7 @@ from .utils import lazy_property
 
 
 class Person(Collection):
-
     class Hobby(Collection):
-
         class Equipment(Collection):
             name = String(required=False, allow_none=True)
             price = Number(required=False, allow_none=True)
@@ -45,7 +43,6 @@ class Person(Collection):
 
 
 class Car(Collection):
-
     __collection__ = "cars"
     _allow_extra_fields = True
 
@@ -77,7 +74,6 @@ cars = [
 
 # Graph data
 class Student(Collection):
-
     __collection__ = "students"
 
     _key = String(required=True)  # registration number
@@ -89,7 +85,6 @@ class Student(Collection):
 
 
 class Teacher(Collection):
-
     __collection__ = "teachers"
 
     _key = String(required=True)  # employee id
@@ -100,7 +95,6 @@ class Teacher(Collection):
 
 
 class Subject(Collection):
-
     __collection__ = "subjects"
 
     _key = String(required=True)  # subject code
@@ -113,7 +107,6 @@ class Subject(Collection):
 
 
 class SpecializesIn(Relation):
-
     __collection__ = "specializes_in"
 
     _key = String()
@@ -128,7 +121,6 @@ class SpecializesIn(Relation):
 
 
 class Area(Collection):
-
     __collection__ = "areas"
 
     _key = String(required=True)  # area name
@@ -138,7 +130,6 @@ class Area(Collection):
 
 
 class DummyFromCol1(Collection):
-
     __collection__ = "dummy_from_col_1"
     _allow_extra_fields = True
 
@@ -146,14 +137,12 @@ class DummyFromCol1(Collection):
 
 
 class DummyFromCol2(Collection):
-
     __collection__ = "dummy_from_col_2"
 
     _key = String(required=True)
 
 
 class DummyRelation(Relation):
-
     __collection__ = "dummy_relation"
 
     _key = String(required=True)
@@ -162,21 +151,18 @@ class DummyRelation(Relation):
 
 
 class DummyToCol1(Collection):
-
     __collection__ = "dummy_to_col_1"
 
     _key = String(required=True)
 
 
 class DummyToCol2(Collection):
-
     __collection__ = "dummy_to_col_2"
 
     _key = String(required=True)
 
 
 class UniversityGraph(Graph):
-
     __graph__ = "university_graph"
 
     graph_connections = [
@@ -359,4 +345,60 @@ own_data2 = [
     Own2(_from='owner/002', _to='vehicle/002'),
     Own2(_from='owner/003', _to='vehicle/001'),
     Own2(_from='owner/003', _to='vehicle/002')
+]
+
+
+# Multiple inheritance data
+
+class People(Collection):
+    __collection__ = "people"
+
+    _key = String()
+    name = String()
+
+
+class Parent(People):
+    work = String()
+
+
+class Child(People):
+    hobby = String()
+
+
+class Boy(People):
+    personality = String()
+
+
+class Girl(People):
+    hair_color = String()
+
+
+class Father(Parent, Boy):
+    wife_name = String()
+
+
+class Mother(Parent, Girl):
+    husband_name = String()
+
+
+class Son(Child, Boy):
+    sister_name = String()
+
+
+class Daughter(Child, Girl):
+    brother_name = String()
+
+
+class PeopleGraph(Graph):
+    __graph__ = "people_graph"
+
+    graph_connections = [
+        GraphConnection(People, Relation('resides_with'), People)
+    ]
+
+people_data = [
+    Father(_key='001', name='Homer', work='Nuclear supervisor', personality='lazy', wife_name='Marge'),
+    Mother(_key='002', name='Marge', work='None', hair_color='blue', husband_name='Homer'),
+    Son(_key='003', name='Bart', hobby='Skateboard', personality='playful', sister_name='Lisa'),
+    Daughter(_key='004', name='Lisa', hobby='Saxophone', hair_color='yellow', brother_name='Bart')
 ]
