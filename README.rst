@@ -620,6 +620,66 @@ Let's expand the bruce object to 2 levels and see **_next** in more action:
     # ['John Wayne']
 
 
+Inheritance Mapping
+__________________________
+
+For inheritance mapping, **arango_orm** offers you two ways to define it.
+
+1. Discriminator field/mapping:
+
+Discriminator field/mapping are defined at entity level:
+
+.. code-block:: python
+
+    class Vehicle(Collection):
+        __collection__ = "vehicle"
+
+        _inheritance_field = "discr"
+        _inheritance_mapping = {
+            'Bike': 'moto',
+            'Truck': 'truck'
+        }
+
+        _key = String()
+        brand = String()
+        model = String()
+        # discr field match what you defined in _inheritance_field
+        # the field type depends on the values of your _inheritance_mapping
+        discr = String(required=True)
+
+
+    class Bike(Vehicle):
+        motor_size = Float()
+
+
+    class Truck(Vehicle):
+        traction_power = Float()
+
+
+2. Inheritance mapping resolver:
+
+The `inheritance_mapping_resolver` is a function defined at graph level; it allows you to make either a simple test
+on a discriminator field, or complex inference
+
+.. code-block:: python
+
+    class OwnershipGraph2(Graph):
+        __graph__ = "ownership_graph"
+
+        graph_connections = [
+            GraphConnection(Owner2, Own2, Vehicle2)
+        ]
+
+        def inheritance_mapping_resolver(self, col_name: str, doc_dict: dict = {}):
+            if col_name == 'vehicle':
+                if 'traction_power' in doc_dict:
+                    return Truck2
+                else:
+                    return Bike2
+
+            return self.vertices[col_name]
+
+
 Graph Traversal Using AQL
 __________________________
 
