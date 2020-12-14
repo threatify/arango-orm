@@ -72,9 +72,21 @@ class CollectionBase(with_metaclass(CollectionMeta)):
     _inheritance_mapping = {}
 
     @classmethod
+    def get_objects_dict(cls):
+        objects_dict = cls._fields.copy()
+
+        if cls.__name__ != CollectionBase().__class__.__name__:
+            for c in cls.__bases__:
+                base_objects_dict = c.get_objects_dict()
+                for i, f in [(i, f) for i, f in base_objects_dict.items() if i not in objects_dict]:
+                    objects_dict[i] = f
+
+        return objects_dict
+
+    @classmethod
     def schema(cls, *args, **kwargs):
 
-        objects_dict = cls._fields.copy()
+        objects_dict = cls.get_objects_dict()
         SchemaClass = type(
             cls.__name__ + "Schema", (ObjectSchema,), objects_dict
         )
