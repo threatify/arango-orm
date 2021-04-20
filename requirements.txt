@@ -1,2 +1,2 @@
-arango-orm
-
+python-arango
+marshmallow
