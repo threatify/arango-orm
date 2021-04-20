@@ -14,7 +14,7 @@ python) and object serialization and de-serialization is handled using
 **marshmallow**.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    getting-started
