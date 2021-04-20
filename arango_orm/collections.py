@@ -1,4 +1,10 @@
-# import pdb
+"""
+Collections Module
+------------------
+
+Core classes for working with collections (vertices) and relations (edges).
+"""
+
 import logging
 
 from marshmallow.fields import String
@@ -104,6 +110,7 @@ class CollectionBase(with_metaclass(CollectionMeta)):
 
 
 class Collection(CollectionBase):
+    """Base class for representing collections (or vertices as called in AranogDB)."""
 
     __collection__ = None
 
@@ -253,7 +260,7 @@ class Collection(CollectionBase):
 
     @classmethod
     def _load(cls, in_dict, only=None, instance=None, db=None):
-        "Create object from given dict"
+        "Create object from given dict."
         if instance:
             in_dict = dict(instance._dump(), **in_dict)
 

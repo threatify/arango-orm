@@ -18,6 +18,7 @@ python) and object serialization and de-serialization is handled using
    :caption: Contents:
 
    getting-started
+   api-reference
 
 
 
