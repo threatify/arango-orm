@@ -90,7 +90,14 @@ class Query(object):
         if not kwargs:
             return self
 
-        condition = " AND ".join(["$REC.{0}==@{0}".format(k) for k in kwargs])
+        conditions = []
+        for k, v in kwargs.items():
+            if isinstance(v, list):
+                conditions.append("$REC.{0} IN @{0}".format(k))
+            else:
+                conditions.append("$REC.{0}==@{0}".format(k))
+
+        condition = " AND ".join(conditions)
         if len(kwargs) > 1:
             condition = "({0})".format(condition)
 

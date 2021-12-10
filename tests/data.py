@@ -396,6 +396,7 @@ class PeopleGraph(Graph):
         GraphConnection(People, Relation('resides_with'), People)
     ]
 
+
 people_data = [
     Father(_key='001', name='Homer', work='Nuclear supervisor', personality='lazy', wife_name='Marge'),
     Mother(_key='002', name='Marge', work='None', hair_color='blue', husband_name='Homer'),

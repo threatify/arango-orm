@@ -192,6 +192,15 @@ _______________
                 "LIKE(rec.name, 'B%')", prepend_rec_name=False, _or=True).all()
 
 
+Filter Using IN
+_______________
+
+.. code-block:: python
+
+    # Get all documents where student age is 20 or 30
+    records = db.query(Student).filter_by(age=[30,20]).all()
+
+
 Filter, Sort and Limit
 ______________________
 
