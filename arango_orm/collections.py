@@ -66,6 +66,11 @@ class ObjectSchema(Schema):
     def make_object(self, data, **kwargs):
         return self.object_class(**data)
 
+    def __del__(self):
+        '''Help GC cleanup'''
+        self.fields = None
+        self.load_fields = None
+        self.dump_fields = None
 
 class CollectionBase(with_metaclass(CollectionMeta)):
     "Base class for Collections, Nodes and Links"
@@ -82,7 +87,7 @@ class CollectionBase(with_metaclass(CollectionMeta)):
         objects_dict = cls._fields.copy()
 
         if cls.__name__ != CollectionBase().__class__.__name__:
-            for c in cls.__bases__:
+            for c in cls.__bases__ and issubclass(cls,CollectionBase):
                 base_objects_dict = c.get_objects_dict()
                 for i, f in [(i, f) for i, f in base_objects_dict.items() if i not in objects_dict]:
                     objects_dict[i] = f
@@ -90,23 +95,40 @@ class CollectionBase(with_metaclass(CollectionMeta)):
         return objects_dict
 
     @classmethod
-    def schema(cls, *args, **kwargs):
-
-        objects_dict = cls.get_objects_dict()
-        SchemaClass = type(
-            cls.__name__ + "Schema", (ObjectSchema,), objects_dict
-        )
-
+    def schema(cls,only=None):
+        '''schema caches Marshmellow Schemas on this class to preserve memory'''
+        if not hasattr(cls,'_cls_schema'):
+            objects_dict = cls.get_objects_dict()
+            cls._cls_schema = type(
+                cls.__name__ + "Schema", (ObjectSchema,), objects_dict
+            )
+        
         # Extra fields related schema configuration
         unknown = EXCLUDE
         if cls._allow_extra_fields is True:
-            unknown = INCLUDE
+            unknown = INCLUDE            
 
-        SC = SchemaClass(*args, **kwargs)
-        SC.unknown = unknown
-        SC.object_class = cls
+        if not hasattr(cls,'_cls_schema_cache'):
+            #print(f'making {cls.__name__} schema with only=None')
+            SC = cls._cls_schema()
+            SC.unknown = unknown
+            SC.object_class = cls
+            cls._cls_schema_cache = {None:SC}
 
-        return SC
+        if only is not None:
+            if only not in cls._cls_schema_cache:
+                #print(f'making {cls.__name__} schema with only={only}')
+                SC = cls._cls_schema(only=only)
+                SC.unknown = unknown
+                SC.object_class = cls
+                cls._cls_schema_cache[only] = SC
+            
+            #print(f'retrieving {cls.__name__} schema with only={only}')
+            return cls._cls_schema_cache[only]
+        
+        else:
+            #print(f'retreiving {cls.__name__} schema with only=None')
+            return cls._cls_schema_cache[None]
 
 
 class Collection(CollectionBase):
@@ -183,6 +205,21 @@ class Collection(CollectionBase):
 
     def __repr__(self):
         return self.__str__()
+
+    def __del__(self):
+        '''Removes references between schema and fields to help GC cleanup '''
+        for parm,field in self._fields.items(): #Clear Fields
+            field.parent = None
+            field.root  = None
+
+        old_dirt = self._dirty
+        self._dirty = None #Clear Dirt Set References
+        del old_dirt
+
+        for field_name, field in self._fields.items():
+            olval =  getattr(self,field_name)
+            self.__delattr__( field_name ) #Clear Assigned Attributes
+            del olval
 
     def __getattribute__(self, item):
 
