@@ -6,7 +6,7 @@ Core classes for working with collections (vertices) and relations (edges).
 """
 
 import logging
-
+import typing
 from marshmallow.fields import String
 from six import with_metaclass
 from marshmallow import (
@@ -87,15 +87,16 @@ class CollectionBase(with_metaclass(CollectionMeta)):
         objects_dict = cls._fields.copy()
 
         if cls.__name__ != CollectionBase().__class__.__name__:
-            for c in cls.__bases__ and issubclass(cls,CollectionBase):
-                base_objects_dict = c.get_objects_dict()
-                for i, f in [(i, f) for i, f in base_objects_dict.items() if i not in objects_dict]:
-                    objects_dict[i] = f
+            for c in cls.__bases__:
+                if issubclass(c,CollectionBase):
+                    base_objects_dict = c.get_objects_dict()
+                    for i, f in [(i, f) for i, f in base_objects_dict.items() if i not in objects_dict]:
+                        objects_dict[i] = f
 
         return objects_dict
 
     @classmethod
-    def schema(cls,only=None):
+    def schema(cls,only:typing.List[str]=None):
         '''schema caches Marshmellow Schemas on this class to preserve memory'''
         if not hasattr(cls,'_cls_schema'):
             objects_dict = cls.get_objects_dict()
@@ -116,18 +117,21 @@ class CollectionBase(with_metaclass(CollectionMeta)):
             cls._cls_schema_cache = {None:SC}
 
         if only is not None:
-            if only not in cls._cls_schema_cache:
-                #print(f'making {cls.__name__} schema with only={only}')
+            #create a unique schema for this input by using a hashable set
+            if isinstance(only,(list,tuple)): 
+                onlyKey = str(set(only)) #garuntees order / uniquness and hashability
+            else:
+                onlyKey = only 
+
+            if onlyKey not in cls._cls_schema_cache:
                 SC = cls._cls_schema(only=only)
                 SC.unknown = unknown
                 SC.object_class = cls
-                cls._cls_schema_cache[only] = SC
+                cls._cls_schema_cache[onlyKey] = SC #asssign the unique schema for only
             
-            #print(f'retrieving {cls.__name__} schema with only={only}')
-            return cls._cls_schema_cache[only]
+            return cls._cls_schema_cache[onlyKey] #return the unique schema with onlykey
         
         else:
-            #print(f'retreiving {cls.__name__} schema with only=None')
             return cls._cls_schema_cache[None]
 
 
@@ -216,10 +220,9 @@ class Collection(CollectionBase):
         self._dirty = None #Clear Dirt Set References
         del old_dirt
 
-        for field_name, field in self._fields.items():
-            olval =  getattr(self,field_name)
-            self.__delattr__( field_name ) #Clear Assigned Attributes
-            del olval
+        oldf = self._fields
+        self._fields = tuple()
+        del oldf
 
     def __getattribute__(self, item):
 
