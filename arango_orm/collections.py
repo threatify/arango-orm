@@ -213,8 +213,8 @@ class Collection(CollectionBase):
     def __del__(self):
         '''Removes references between schema and fields to help GC cleanup '''
         for parm,field in self._fields.items(): #Clear Fields
-            field.parent = None
-            field.root  = None
+            if hasattr(field,'parent'): field.parent = None
+            if hasattr(field,'root'): field.root  = None
 
         old_dirt = self._dirty
         self._dirty = None #Clear Dirt Set References
