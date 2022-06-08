@@ -448,7 +448,7 @@ Now it's time to create the graph. Note that we don't need to create the collect
     db.create_graph(uni_graph)
 
 
-Now the graph and all it's collections have been created, we can verify their existence:
+Now the graph and all its collections have been created, we can verify their existence:
 
 .. code-block:: python
 
