@@ -41,6 +41,16 @@ class Query(object):
 
         return next(results)
 
+    def full_count(self):
+        "Return collection full count"
+
+        aql = self._make_aql()
+
+        aql += "\n RETURN rec"
+
+        cursor = self._db.aql.execute(aql, bind_vars=self._bind_vars, full_count=True)
+        return cursor.statistics()['fullCount']
+
     def by_key(self, key, **kwargs):
         "Return a single document using it's key"
 
