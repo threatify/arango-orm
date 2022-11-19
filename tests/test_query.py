@@ -266,3 +266,11 @@ class TestQuery(TestBase):
         db.query(Car).delete()
 
         assert 0 == db.query(Car).count()
+
+    def test_19_get_full_count(self):
+
+        db = self._get_db_obj()
+
+        count_1 = db.query(Person).limit(1).full_count()
+
+        assert count_1 == 2
