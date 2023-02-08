@@ -96,43 +96,54 @@ class CollectionBase(with_metaclass(CollectionMeta)):
         return objects_dict
 
     @classmethod
-    def schema(cls,only:typing.List[str]=None):
-        '''schema caches Marshmellow Schemas on this class to preserve memory'''
-        if not hasattr(cls,'_cls_schema'):
+    def schema(cls, only: typing.List[str] = None,recache:bool=False):
+        """schema caches Marshmellow Schemas on this class to preserve memory
+        :param recache: if included """
+
+        f = lambda cl: "__{}__cls_schema".format(cl.__name__)
+        g = lambda cl: "__{}__cls_schema_cache".format(cl.__name__)
+
+        if not hasattr(cls, f(cls)) or recache:
             objects_dict = cls.get_objects_dict()
-            cls._cls_schema = type(
-                cls.__name__ + "Schema", (ObjectSchema,), objects_dict
+            setattr(
+                cls,
+                f(cls),
+                type(cls.__name__ + "Schema", (ObjectSchema,), objects_dict),
             )
-        
+
         # Extra fields related schema configuration
         unknown = EXCLUDE
         if cls._allow_extra_fields is True:
-            unknown = INCLUDE            
+            unknown = INCLUDE
 
-        if not hasattr(cls,'_cls_schema_cache'):
-            #print(f'making {cls.__name__} schema with only=None')
-            SC = cls._cls_schema()
+        if not hasattr(cls, g(cls)) or recache:
+            # print(f'making {cls.__name__} schema with only=None')
+            SC = getattr(cls, f(cls))()
             SC.unknown = unknown
             SC.object_class = cls
-            cls._cls_schema_cache = {None:SC}
+            setattr(cls, g(cls), {None: SC})
 
         if only is not None:
-            #create a unique schema for this input by using a hashable set
-            if isinstance(only,(list,tuple)): 
-                onlyKey = str(set(only)) #garuntees order / uniquness and hashability
+            # create a unique schema for this input by using a hashable set
+            if isinstance(only, (list, tuple)):
+                onlyKey = str(
+                    set(only)
+                )  # garuntees order / uniquness and hashability
             else:
-                onlyKey = only 
+                onlyKey = only
 
-            if onlyKey not in cls._cls_schema_cache:
-                SC = cls._cls_schema(only=only)
+            if onlyKey not in getattr(cls,g(cls)):
+                SC = getattr(cls, f(cls))(only=only)
                 SC.unknown = unknown
                 SC.object_class = cls
-                cls._cls_schema_cache[onlyKey] = SC #asssign the unique schema for only
-            
-            return cls._cls_schema_cache[onlyKey] #return the unique schema with onlykey
-        
+                getattr(cls, g(cls))[
+                    onlyKey
+                ] = SC  # asssign the unique schema for only
+
+            # return the unique schema with onlykey
+            return getattr(cls, g(cls))[onlyKey]
         else:
-            return cls._cls_schema_cache[None]
+            return getattr(cls, g(cls))[None]
 
 
 class Collection(CollectionBase):
