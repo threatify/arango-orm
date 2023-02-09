@@ -96,20 +96,30 @@ class CollectionBase(with_metaclass(CollectionMeta)):
         return objects_dict
 
     @classmethod
-    def schema(cls,only:typing.List[str]=None):
-        '''schema caches Marshmellow Schemas on this class to preserve memory'''
-        if not hasattr(cls,'_cls_schema'):
-            objects_dict = cls.get_objects_dict()
+    def get_schema_class(cls):
+        '''Return schema class (not an instance)'''
+        if (not hasattr(cls,'_cls_schema') or
+            cls._cls_schema.__name__ != cls.__name__ + "Schema"): 
+            #print("Getting schema " + cls.__name__)
             cls._cls_schema = type(
-                cls.__name__ + "Schema", (ObjectSchema,), objects_dict
+                cls.__name__ + "Schema", (ObjectSchema,), cls.get_objects_dict()
             )
+        return cls._cls_schema
+
+    @classmethod
+    def schema(cls,only:typing.List[str]=None):
+        '''schema caches Marshmellow Schemas instance on this class to preserve memory'''
         
+        # check if exist schema or regenerate in case of class inheritance
+        cls.get_schema_class()
+
         # Extra fields related schema configuration
         unknown = EXCLUDE
         if cls._allow_extra_fields is True:
-            unknown = INCLUDE            
+            unknown = INCLUDE 
 
-        if not hasattr(cls,'_cls_schema_cache'):
+        if (not hasattr(cls,'_cls_schema_cache') or 
+            cls._cls_schema_cache[None].__class__.__name__ != cls.__name__ + "Schema"): 
             #print(f'making {cls.__name__} schema with only=None')
             SC = cls._cls_schema()
             SC.unknown = unknown
@@ -121,7 +131,7 @@ class CollectionBase(with_metaclass(CollectionMeta)):
             if isinstance(only,(list,tuple)): 
                 onlyKey = str(set(only)) #garuntees order / uniquness and hashability
             else:
-                onlyKey = only 
+                onlyKey = only
 
             if onlyKey not in cls._cls_schema_cache:
                 SC = cls._cls_schema(only=only)

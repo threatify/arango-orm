@@ -70,6 +70,10 @@ class ConnectionPool(object):
         """Database.delete wrapper."""
         return self._db.delete(entity, **kwargs)
 
+    def bulk_delete(self, entity_list, **kwargs):
+        """Database.bulk_delete wrapper."""
+        return self._db.bulk_delete(entity_list, **kwargs)
+
     def update(self, entity, only_dirty=False, **kwargs):
         """Database.update wrapper."""
         return self._db.update(entity, only_dirty=only_dirty, **kwargs)

@@ -1,7 +1,13 @@
 CHANGES
 =======
 
-Versoin 0.6.2
+Version 0.7.1
+-------------
+
+- Add Collection.get_schema_class(), schema() return instance instead
+- Fix Collection.schema(). Marshmallow schema is recreated in case of class inheritation.
+
+Version 0.6.2
 -------------
 
 Merging PR from @chris-green with thanks.

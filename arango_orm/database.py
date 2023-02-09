@@ -209,6 +209,13 @@ class Database(ArangoDatabase):
         dispatch(entity, "post_delete", db=self, result=res)
         return res
 
+    def bulk_delete(self, entity_list, **kwargs):
+        '''Bulk delete utility, based on delete method. Return a list of results.'''
+        res = []
+        for entity in entity_list:
+            res.append(self.delete(entity, **kwargs))
+        return res    
+
     def update(self, entity, only_dirty=False, **kwargs):
         "Update given document"
         collection = self._db.collection(entity.__collection__)
