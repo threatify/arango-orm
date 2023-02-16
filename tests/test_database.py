@@ -462,3 +462,32 @@ class TestDatabase(TestBase):
         self.assertEqual(p_ref2.name, "NB-20")
         self.assertEqual("Wayne John", s1.name)
         self.assertEqual("Parker Lilly", s2.name)
+
+    def test_25_bulk_delete_records(self):
+
+        db = self._get_db_obj()
+
+        count_0 = db.query(Person).count()
+        p = [
+            Person(
+                name="temp0", _key="73", dob=date(year=2016, month=9, day=12)
+            ),
+            Person(
+                name="temp1", _key="74", dob=date(year=2017, month=9, day=12)
+            ),
+            Person(
+                name="temp2", _key="75", dob=date(year=2018, month=9, day=12)
+            ),
+        ]
+        db.bulk_add(p)
+
+        count_1 = db.query(Person).count()
+
+        assert count_1 == count_0 + len(p)
+
+        db.bulk_delete(p)
+
+        count_2 = db.query(Person).count()
+
+        assert count_2 == count_0
+

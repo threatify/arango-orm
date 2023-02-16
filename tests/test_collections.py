@@ -252,3 +252,16 @@ class TestCollection(TestBase):
         knitting = new_person.hobby[1]
         self.assertEqual(knitting.name, "Knitting")
         self.assertEqual(knitting.type, "Relaxing")
+
+    def test_14_class_inheritance(self):
+        class SuperCar(Car):
+            __collection__ = "supercar"
+
+        #shitty_audi = Car(make="Audi", model="RS4", year="2022")
+
+        bmw_m3_e92 = SuperCar._load({"make": "BMW", "model": "M3 E92", "year":"2009"})
+
+        print(SuperCar._cls_schema.__name__)
+
+        self.assertEqual(bmw_m3_e92.__collection__, "supercar")
+        

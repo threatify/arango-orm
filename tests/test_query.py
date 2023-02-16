@@ -267,6 +267,7 @@ class TestQuery(TestBase):
 
         assert 0 == db.query(Car).count()
 
+
     def test_19_get_full_count(self):
 
         db = self._get_db_obj()
