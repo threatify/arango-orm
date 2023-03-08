@@ -77,7 +77,7 @@ First we need to define data models (similar to SQLAlchemy's models) to specify 
     class Student(Collection):
 
         __collection__ = 'students'
-        _index = [{'type': 'hash', fields: ['name'], unique=False}]
+        _index = [{'type': 'hash', 'fields': ['name'], 'unique': True}]
 
         _key = String(required=True)  # registration number
         name = String(required=True, allow_none=False)
